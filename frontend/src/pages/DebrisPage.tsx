@@ -73,7 +73,7 @@ export default function DebrisPage() {
         <MetricCard
           label="Active Tracks"
           value={liveDebris != null ? String(liveDebris.active_tracks) : "--"}
-          accent="violet"
+          accent="sky"
           sub="Objects currently visible in consecutive frames"
         />
       </div>

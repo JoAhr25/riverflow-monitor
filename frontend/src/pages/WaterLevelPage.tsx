@@ -93,7 +93,7 @@ export default function WaterLevelPage() {
           value={primary?.distance_m != null ? primary.distance_m.toFixed(3) : "--"}
           unit={primary?.distance_m != null ? "m" : undefined}
           status={primary?.status ?? "offline"}
-          accent="violet"
+          accent="sky"
           sub="Raw TF-Luna ToF distance to water surface"
         />
         <MetricCard

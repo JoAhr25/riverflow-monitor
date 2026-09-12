@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import Card from "../components/Card";
 import Compass from "../components/Compass";
 import EmptyState from "../components/EmptyState";
@@ -32,7 +33,12 @@ export default function FlowAnalysisPage() {
       {!flow && (
         <EmptyState
           message="No flow measurement available."
-          hint="Upload a video or connect a camera on the Live Camera page and start processing."
+          hint="Upload a video or connect a camera and start processing."
+          action={
+            <Link to="/live-camera" className="text-sm font-medium text-sky-600 hover:underline dark:text-sky-400">
+              Go to Live Camera →
+            </Link>
+          }
         />
       )}
 
@@ -53,7 +59,7 @@ export default function FlowAnalysisPage() {
               label="Vector Coverage"
               value={flow.coverage != null ? `${(flow.coverage * 100).toFixed(0)}` : "--"}
               unit="%"
-              accent="violet"
+              accent="sky"
               sub="ROI grid cells with motion above threshold"
             />
           </div>

@@ -39,7 +39,7 @@ export default function Compass({ directionDeg, size = 84 }: { directionDeg: num
         ) : null}
         <circle cx={cx} cy={cy} r="3" fill={valid ? "#38bdf8" : "#94a3b8"} />
       </svg>
-      <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+      <span className="font-mono text-xs font-medium text-slate-600 dark:text-slate-300">
         {valid ? `${(directionDeg as number).toFixed(0)}° ${directionLabel(directionDeg)}` : "no data"}
       </span>
     </div>

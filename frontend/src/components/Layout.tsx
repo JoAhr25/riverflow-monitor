@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useLive } from "../services/live";
 import StatusDot from "./StatusDot";
+import { Logo } from "./Logo";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: "M3 13h2v8H3v-8zm4-6h2v14H7V7zm4 3h2v11h-2V10zm4-7h2v18h-2V3z" },
@@ -55,12 +56,15 @@ export default function Layout() {
         className={`${menuOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-40 w-60 shrink-0 border-r border-slate-200 bg-white transition-transform dark:border-slate-800 dark:bg-slate-900 md:sticky md:top-0 md:h-screen md:translate-x-0`}
       >
         <div className="flex h-14 items-center gap-2.5 border-b border-slate-200 px-4 dark:border-slate-800">
-          <svg className="h-7 w-7 text-sky-500" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-            <path strokeLinecap="round" d="M3 15c2 0 3-1.5 5-1.5s3 1.5 5 1.5 3-1.5 5-1.5M3 19c2 0 3-1.5 5-1.5s3 1.5 5 1.5 3-1.5 5-1.5M8 11V6a2 2 0 012-2h6a2 2 0 012 2v5" />
-          </svg>
-          <div className="leading-tight">
-            <div className="text-sm font-bold text-slate-900 dark:text-white">RiverFlow Monitor</div>
-            <div className="text-[10px] tracking-wide text-slate-500 dark:text-slate-400">Non-Contact River Monitoring</div>
+          <Logo size={30} />
+          <div className="min-w-0 leading-tight">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-bold text-slate-900 dark:text-white">RiverFlow Monitor</span>
+              <span className="rounded bg-slate-200 px-1.5 py-px font-mono text-[9px] font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                v0.1.0
+              </span>
+            </div>
+            <div className="truncate text-[10px] tracking-wide text-slate-500 dark:text-slate-400">Non-Contact River Monitoring</div>
           </div>
         </div>
         <nav className="space-y-0.5 overflow-y-auto p-2">
