@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Backend runtime data
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/data/appdata/*
+!backend/data/appdata/.gitkeep
+backend/tests/sample_moving.*
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+
+# Videos placed for the development-video source (data/raw at repo root)
+data/raw/*.mp4
+data/raw/*.mov
+data/raw/*.MOV
+data/raw/*.avi
+data/raw/*.mkv
+
+.DS_Store
+Thumbs.db
+.vscode/
