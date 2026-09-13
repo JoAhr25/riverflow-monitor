@@ -5,6 +5,7 @@ from services.camera_manager import CameraManager
 from services.config_service import ConfigService
 from services.state import AppState
 from services.broadcast import WSManager
+from services import auth
 from database.database import Database
 from processing.calibration import CalibrationManager
 from processing.debris_detector import DebrisDetector
@@ -48,6 +49,7 @@ def system_status() -> dict[str, Any]:
         "demo_mode": snap["demo_mode"],
         "uptime_s": snap["uptime_s"],
         "timestamp": snap["timestamp"],
+        "auth_required": auth.enabled(),
         "components": {
             "camera": {"status": camera_status, "detail": snap["camera"].get("message", "")},
             "lidar": {"status": lidar_status, "detail": snap["lidar"].get("message", ""), "mock": snap["lidar"].get("mock")},

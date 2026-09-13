@@ -79,6 +79,7 @@ export interface SystemStatus {
   demo_mode: boolean;
   uptime_s: number;
   timestamp: string;
+  auth_required?: boolean;
   components: {
     camera: ComponentStatus;
     lidar: ComponentStatus;

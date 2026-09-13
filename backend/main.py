@@ -15,7 +15,7 @@ if str(BACKEND_DIR) not in sys.path:
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 import paths
@@ -121,12 +121,69 @@ else:
             "name": "RiverFlow Monitor API",
             "docs": "/docs",
             "status": "/api/status",
-            "note": "Frontend not built. Run 'npm run build' in webapp/frontend to serve the dashboard from this port.",
+            "note": "Frontend not built. Run 'npm run build' in frontend/ to serve the dashboard from this port.",
         }
+
+
+@app.middleware("http")
+async def auth_middleware(request, call_next):
+    from services import auth
+    from fastapi.responses import JSONResponse
+
+    path = request.url.path
+    if auth.enabled() and path.startswith(("/api", "/ws")) and path != "/api/auth/login":
+        token = request.cookies.get(auth.COOKIE_NAME, "")
+        if not auth.verify_token(token):
+            return JSONResponse({"detail": "authentication required"}, status_code=401)
+    return await call_next(request)
+
+
+@app.post("/api/auth/login")
+async def auth_login(body: dict):
+    from services import auth
+
+    if not auth.enabled():
+        raise HTTPException(status_code=400, detail="Authentication is disabled on this server.")
+    if not auth.check_credentials(str(body.get("username", "")), str(body.get("password", ""))):
+        raise HTTPException(status_code=401, detail="Invalid username or password.")
+    response = JSONResponse({"ok": True, "user": auth.current_user()})
+    response.set_cookie(
+        auth.COOKIE_NAME,
+        auth.issue_token(),
+        httponly=True,
+        samesite="lax",
+        max_age=auth.EXPIRY_S,
+    )
+    return response
+
+
+@app.get("/api/auth/check")
+def auth_check():
+    from services import auth
+
+    if not auth.enabled():
+        return {"ok": True, "auth_required": False}
+    return {"ok": True, "auth_required": True, "user": auth.current_user()}
+
+
+@app.post("/api/auth/logout")
+def auth_logout():
+    from services import auth
+
+    response = JSONResponse({"ok": True})
+    response.delete_cookie(auth.COOKIE_NAME)
+    return response
 
 
 @app.websocket("/ws/live")
 async def ws_live(ws: WebSocket):
+    from services import auth
+
+    if auth.enabled():
+        token = ws.cookies.get(auth.COOKIE_NAME, "")
+        if not auth.verify_token(token):
+            await ws.close(code=1008)
+            return
     reg = get_registry()
     await reg.ws.connect(ws)
     try:

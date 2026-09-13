@@ -14,6 +14,9 @@ import type {
 const jsonHeaders = { "Content-Type": "application/json" };
 
 async function handle<T>(resp: Response): Promise<T> {
+  if (resp.status === 401 && !resp.url.includes("/api/auth/login")) {
+    window.dispatchEvent(new Event("rf-unauthorized"));
+  }
   if (!resp.ok) {
     let detail = `${resp.status} ${resp.statusText}`;
     try {
@@ -26,6 +29,24 @@ async function handle<T>(resp: Response): Promise<T> {
   }
   return resp.json() as Promise<T>;
 }
+
+export const authApi = {
+  async check(): Promise<{ ok: boolean; auth_required: boolean; user?: string }> {
+    return handle(await fetch("/api/auth/check"));
+  },
+  async login(username: string, password: string): Promise<{ ok: boolean; user: string }> {
+    return handle(
+      await fetch("/api/auth/login", {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({ username, password }),
+      }),
+    );
+  },
+  async logout(): Promise<{ ok: boolean }> {
+    return handle(await fetch("/api/auth/logout", { method: "POST" }));
+  },
+};
 
 export const api = {
   async getStatus(): Promise<SystemStatus> {

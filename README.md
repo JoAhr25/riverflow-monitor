@@ -1,5 +1,10 @@
 # RiverFlow Monitor — Web Application
 
+![FastAPI](https://img.shields.io/badge/backend-FastAPI-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/frontend-React_19-149ECA?logo=react&logoColor=white)
+![OpenCV](https://img.shields.io/badge/processing-OpenCV-5C3EE8?logo=opencv&logoColor=white)
+![Docker](https://img.shields.io/badge/deploy-Docker-2496ED?logo=docker&logoColor=white)
+
 **Real-Time Non-Contact River Monitoring System**
 
 Visualization and monitoring interface for the river monitoring research project.
@@ -312,8 +317,30 @@ with HTTPS in front for a proper domain). The same image deploys to
 Render / Railway / Fly.io.
 
 Note: a public instance lets anyone upload videos and control processing —
-add authentication before sharing widely. Long term, the intended remote
-architecture is Pi → LoRa → gateway → cloud backend → dashboard.
+enable authentication (below) before sharing widely. Long term, the intended
+remote architecture is Pi → LoRa → gateway → cloud backend → dashboard.
+
+---
+
+## Authentication (public deployments)
+
+The dashboard supports login-protected mode, **disabled by default** so local
+development is unchanged. Enable it with environment variables:
+
+| Variable | Meaning |
+|---|---|
+| `RIVERFLOW_AUTH_USER` | login username (empty = auth disabled) |
+| `RIVERFLOW_AUTH_PASSWORD` | login password |
+| `RIVERFLOW_AUTH_SECRET` | HMAC signing secret (optional; random per restart when unset, which logs out all sessions on restart) |
+
+When enabled, all API endpoints, the WebSocket and the video stream require a
+valid session cookie (30-day expiry, HttpOnly). The login page appears
+automatically; a logout button shows in the top bar.
+
+On **Render**: Service → **Environment** → add `RIVERFLOW_AUTH_USER` and
+`RIVERFLOW_AUTH_PASSWORD` → Save (triggers redeploy). Use a long password.
+
+On **Docker**: `docker run -e RIVERFLOW_AUTH_USER=admin -e RIVERFLOW_AUTH_PASSWORD=… …`
 
 ---
 

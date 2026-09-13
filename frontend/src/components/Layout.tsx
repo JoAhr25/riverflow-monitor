@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useLive } from "../services/live";
+import { authApi } from "../services/api";
 import StatusDot from "./StatusDot";
+import Footer from "./Footer";
 import { Logo } from "./Logo";
 
 const NAV = [
@@ -119,6 +121,24 @@ export default function Layout() {
             <span className="text-xs text-slate-500 dark:text-slate-400">
               Last update: <span className="font-mono">{lastUpdate ? lastUpdate.replace("T", " ") : "--:--:--"}</span>
             </span>
+            {status?.auth_required && (
+              <button
+                onClick={async () => {
+                  try {
+                    await authApi.logout();
+                  } catch {
+                    /* ignore */
+                  }
+                  window.dispatchEvent(new Event("rf-unauthorized"));
+                }}
+                className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                title="Sign out"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12H3m0 0l4-4m-4 4l4 4m6-11h4a2 2 0 012 2v10a2 2 0 01-2 2h-4" />
+                </svg>
+              </button>
+            )}
             <ThemeToggle />
           </div>
         </header>
@@ -131,6 +151,7 @@ export default function Layout() {
 
         <main className="min-w-0 flex-1 overflow-y-auto p-4 md:p-6">
           <Outlet />
+          <Footer />
         </main>
       </div>
     </div>
