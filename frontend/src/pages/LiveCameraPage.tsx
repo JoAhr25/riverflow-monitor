@@ -121,7 +121,7 @@ export default function LiveCameraPage() {
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
         <Card title="Camera Feed" className="xl:col-span-2" subtitle={sourceInfo ? `${sourceInfo.mode_label} — ${sourceInfo.label} (${sourceInfo.width}×${sourceInfo.height}${sourceInfo.fps ? ` @ ${sourceInfo.fps.toFixed(0)} fps` : ""})` : "No active source"}>
-          <CameraFeed />
+          <CameraFeed overlays={overlays} />
           {sourceInfo && sourceInfo.frame_count != null && (
             <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
               {sourceInfo.frame_count} frames · duration {sourceInfo.duration_s?.toFixed(2) ?? "?"} s
