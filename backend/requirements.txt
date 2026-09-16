@@ -1,0 +1,10 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+opencv-python-headless>=4.9
+numpy>=1.26
+python-multipart>=0.0.9
+
+# Optional integrations (install only when the hardware/model is available):
+# pyserial          -> TF-Luna LiDAR serial + LoRa serial hardware
+# pyopenrivercam    -> PyORC LSPIV adapter (recommended: use the existing pyorc_env conda env)
+# ultralytics       -> YOLO floating-debris detection model
