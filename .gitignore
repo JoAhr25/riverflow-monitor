@@ -3,6 +3,9 @@ node_modules/
 .pnp
 .pnp.js
 
+# GitHub Actions workflows (requires workflow scope token to push)
+.github/
+
 # Build outputs
 frontend/dist/
 frontend/build/
