@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "riverflow-monitor-4ddd9",
     "public": "frontend/dist",
     "ignore": [
       "firebase.json",
