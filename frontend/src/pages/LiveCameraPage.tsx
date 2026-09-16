@@ -25,6 +25,7 @@ export default function LiveCameraPage() {
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [loopVideo, setLoopVideo] = useState(false);
   const [overlays, setOverlays] = useState({ roi: true, flow_vectors: true, debris_boxes: true, water_edge: true, hud: true });
+  const [flowDirection, setFlowDirection] = useState<number>(45);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const refreshSources = useCallback(() => {
@@ -121,7 +122,7 @@ export default function LiveCameraPage() {
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
         <Card title="Camera Feed" className="xl:col-span-2" subtitle={sourceInfo ? `${sourceInfo.mode_label} — ${sourceInfo.label} (${sourceInfo.width}×${sourceInfo.height}${sourceInfo.fps ? ` @ ${sourceInfo.fps.toFixed(0)} fps` : ""})` : "No active source"}>
-          <CameraFeed overlays={overlays} />
+          <CameraFeed overlays={overlays} flowDirectionAngle={flowDirection} />
           {sourceInfo && sourceInfo.frame_count != null && (
             <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
               {sourceInfo.frame_count} frames · duration {sourceInfo.duration_s?.toFixed(2) ?? "?"} s
@@ -244,15 +245,62 @@ export default function LiveCameraPage() {
               {(
                 [
                   ["roi", "ROI rectangle"],
-                  ["flow_vectors", "Flow vectors"],
-                  ["debris_boxes", "Debris boxes"],
-                  ["water_edge", "Water edge line"],
-                  ["hud", "HUD (FPS, motion, status)"],
+                  ["flow_vectors", "Flow vectors (flowing arrows & grid)"],
+                  ["debris_boxes", "Debris tracking boxes"],
+                  ["water_edge", "Water edge & staff gauge"],
+                  ["hud", "Hydrology HUD telemetry"],
                 ] as [keyof typeof overlays, string][]
               ).map(([key, label]) => (
                 <Toggle key={key} checked={overlays[key]} onChange={(v) => setOverlay(key, v)} label={label} />
               ))}
             </div>
+
+            {overlays.flow_vectors && (
+              <div className="mt-4 border-t border-slate-200 pt-3 dark:border-slate-800">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-medium text-slate-700 dark:text-slate-300">Flow Arrow Direction</span>
+                  <span className="font-mono text-sky-600 dark:text-sky-400 font-semibold">{flowDirection}°</span>
+                </div>
+                <div className="mt-2 grid grid-cols-4 gap-1">
+                  {[
+                    { label: "↘ 45°", deg: 45 },
+                    { label: "↓ 90°", deg: 90 },
+                    { label: "↙ 135°", deg: 135 },
+                    { label: "→ 0°", deg: 0 },
+                  ].map((p) => (
+                    <button
+                      key={p.deg}
+                      type="button"
+                      onClick={() => setFlowDirection(p.deg)}
+                      className={`rounded px-1.5 py-1 text-[11px] font-medium transition ${
+                        flowDirection === p.deg
+                          ? "bg-sky-600 text-white shadow-sm"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-2.5">
+                  <input
+                    type="range"
+                    min={0}
+                    max={360}
+                    step={5}
+                    value={flowDirection}
+                    onChange={(e) => setFlowDirection(Number(e.target.value))}
+                    className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-slate-200 accent-sky-600 dark:bg-slate-700"
+                  />
+                  <div className="flex justify-between text-[9px] text-slate-400 mt-0.5">
+                    <span>0° (Right)</span>
+                    <span>90° (Down)</span>
+                    <span>180° (Left)</span>
+                    <span>270° (Up)</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
       </div>
