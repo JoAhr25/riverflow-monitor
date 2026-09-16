@@ -92,6 +92,7 @@ export default function LiveCameraPage() {
 
   const sourceInfo = status?.source;
   const processing = status?.processing;
+  const isDemo = status?.demo_mode === true;
 
   return (
     <div className="space-y-5">
@@ -112,13 +113,15 @@ export default function LiveCameraPage() {
       {error && <div className="rounded-lg border border-rose-300 bg-rose-50 px-4 py-2.5 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">{error}</div>}
       {info && <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">{info}</div>}
 
-      {/* Demo mode notice */}
-      <div className="rounded-lg border border-sky-300 bg-sky-50 px-4 py-2.5 text-sm text-sky-800 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300">
-        <span className="font-semibold">🌐 Firebase Demo Mode — </span>
-        Upload any river video and click <strong>Start Processing</strong> to launch a simulated analysis session.
-        Live charts, metrics, and the camera feed will animate with demo data.
-        For real optical-flow processing, connect a Python backend server.
-      </div>
+      {/* Demo mode notice (only when no real backend is connected) */}
+      {isDemo && (
+        <div className="rounded-lg border border-sky-300 bg-sky-50 px-4 py-2.5 text-sm text-sky-800 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300">
+          <span className="font-semibold">🌐 Firebase Demo Mode — </span>
+          Upload any river video and click <strong>Start Processing</strong> to launch a simulated analysis session.
+          Live charts, metrics, and the camera feed will animate with demo data.
+          For real optical-flow processing, connect a Python backend server.
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
         <Card title="Camera Feed" className="xl:col-span-2" subtitle={sourceInfo ? `${sourceInfo.mode_label} — ${sourceInfo.label} (${sourceInfo.width}×${sourceInfo.height}${sourceInfo.fps ? ` @ ${sourceInfo.fps.toFixed(0)} fps` : ""})` : "No active source"}>
@@ -247,7 +250,7 @@ export default function LiveCameraPage() {
                   ["roi", "ROI rectangle"],
                   ["flow_vectors", "Flow vectors (flowing arrows & grid)"],
                   ["debris_boxes", "Debris tracking boxes"],
-                  ["water_edge", "Water edge & staff gauge"],
+                  ["water_edge", "Water edge line"],
                   ["hud", "Hydrology HUD telemetry"],
                 ] as [keyof typeof overlays, string][]
               ).map(([key, label]) => (
@@ -255,10 +258,10 @@ export default function LiveCameraPage() {
               ))}
             </div>
 
-            {overlays.flow_vectors && (
+            {overlays.flow_vectors && isDemo && (
               <div className="mt-4 border-t border-slate-200 pt-3 dark:border-slate-800">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium text-slate-700 dark:text-slate-300">Flow Arrow Direction</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-300">Flow Arrow Direction (demo)</span>
                   <span className="font-mono text-sky-600 dark:text-sky-400 font-semibold">{flowDirection}°</span>
                 </div>
                 <div className="mt-2 grid grid-cols-4 gap-1">

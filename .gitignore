@@ -64,3 +64,19 @@ temp/
 
 # OS
 Desktop.ini
+
+# Python caches
+.pytest_cache/
+
+# Backend runtime data (uploaded test videos, SQLite DB)
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/data/appdata/*
+!backend/data/appdata/.gitkeep
+backend/tests/sample_moving.*
+
+# TypeScript build info
+frontend/*.tsbuildinfo
+
+# Thesis draft (kept out of the public repo; delete this line to publish it)
+Thesis Paper.docx

@@ -51,9 +51,10 @@ export default function DashboardPage() {
           <CameraFeed />
           <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-emerald-400" /> ROI</span>
-            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-yellow-400" /> Flow vectors</span>
-            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-rose-400" /> Debris boxes</span>
-            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-orange-400" /> Water edge</span>
+            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-cyan-400" /> Flow: slow</span>
+            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-amber-400" /> faster</span>
+            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-rose-400" /> fast · debris</span>
+            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-sky-400" /> Water edge</span>
           </div>
         </Card>
 

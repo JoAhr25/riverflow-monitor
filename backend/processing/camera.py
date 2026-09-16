@@ -66,8 +66,10 @@ class VideoFileSource(CameraSource):
         super().__init__(label or self.path.name)
         self.playback_speed = max(0.1, float(playback_speed))
         self._loop = False
+        self._next_frame_t: float | None = None
 
     def open(self) -> bool:
+        self._next_frame_t = None
         self._cap = cv2.VideoCapture(str(self.path))
         return self._cap.isOpened()
 
@@ -88,15 +90,34 @@ class VideoFileSource(CameraSource):
         )
 
     def rewind(self) -> bool:
+        self._next_frame_t = None
         if self._cap is not None:
             self._cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
             return True
         return False
 
     def pace(self, video_fps: float) -> None:
-        if video_fps and video_fps > 0:
-            delay = 1.0 / (video_fps * self.playback_speed)
-            time.sleep(delay)
+        """Sleep only the remaining time until the next frame deadline.
+
+        Sleeping a full frame period unconditionally (on top of processing
+        time) made playback lag several times below the video frame rate.
+        When processing already exceeded the budget we skip the sleep and
+        reschedule from now, so playback stays as smooth as the pipeline
+        allows instead of compounding delays.
+        """
+        if not video_fps or video_fps <= 0:
+            return
+        period = 1.0 / (video_fps * self.playback_speed)
+        now = time.monotonic()
+        if self._next_frame_t is None:
+            self._next_frame_t = now + period
+            return
+        remaining = self._next_frame_t - now
+        if remaining > 0:
+            time.sleep(remaining)
+            self._next_frame_t += period
+        else:
+            self._next_frame_t = now + period
 
     @property
     def paced(self) -> bool:

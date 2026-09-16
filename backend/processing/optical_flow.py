@@ -50,13 +50,25 @@ class FarnebackFlowProcessor:
         self.poly_sigma = float(p.get("poly_sigma", 1.2))
         self.vector_grid = max(8, int(vector_grid))
         self.min_vector_magnitude = float(min_vector_magnitude)
+        self.max_work_width = int(p.get("max_work_width", 480))
         self._prev_gray: np.ndarray | None = None
 
     def reset(self) -> None:
         self._prev_gray = None
 
     def process_frame(self, gray_frame: np.ndarray) -> dict[str, Any] | None:
+        # Farneback is the pipeline bottleneck on full-resolution ROIs.
+        # Compute on a downscaled copy and scale displacements back to the
+        # original ROI pixel space so all reported values keep their units.
+        scale = 1.0
         gray = gray_frame
+        if 0 < self.max_work_width < gray.shape[1]:
+            scale = self.max_work_width / gray.shape[1]
+            gray = cv2.resize(
+                gray,
+                (max(2, int(round(gray.shape[1] * scale))), max(2, int(round(gray.shape[0] * scale)))),
+                interpolation=cv2.INTER_AREA,
+            )
         if self._prev_gray is None or gray.shape != self._prev_gray.shape:
             self._prev_gray = gray.copy()
             return None
@@ -74,8 +86,9 @@ class FarnebackFlowProcessor:
         )
         self._prev_gray = gray.copy()
 
-        fx: np.ndarray = flow[..., 0]
-        fy: np.ndarray = flow[..., 1]
+        inv = 1.0 / scale
+        fx: np.ndarray = flow[..., 0] * inv
+        fy: np.ndarray = flow[..., 1] * inv
         magnitude = np.sqrt(fx**2 + fy**2)
         motion_x = float(np.mean(fx))
         motion_y = float(np.mean(fy))
@@ -83,7 +96,16 @@ class FarnebackFlowProcessor:
         direction = float(np.degrees(np.arctan2(-motion_y, motion_x)))
 
         vectors: list[list[float]] = []
-        step = self.vector_grid
+        # Keep the overlay grid readable and resolution-independent: the
+        # configured grid size acts as the MINIMUM spacing (in original
+        # pixels) and the grid is capped at ~40 columns / ~24 rows, so a
+        # 1920px ROI shows the same arrow density as a 640px one.
+        step_orig = max(
+            self.vector_grid,
+            int(np.ceil(gray_frame.shape[1] / 40)),
+            int(np.ceil(gray_frame.shape[0] / 24)),
+        )
+        step = max(2, int(round(step_orig * scale)))
         valid = 0
         total = 0
         for y in range(step // 2, gray.shape[0], step):
@@ -94,7 +116,7 @@ class FarnebackFlowProcessor:
                 total += 1
                 if mag >= self.min_vector_magnitude:
                     valid += 1
-                    vectors.append([float(x), float(y), u, v])
+                    vectors.append([float(x * inv), float(y * inv), u, v])
 
         return {
             "motion_x": motion_x,

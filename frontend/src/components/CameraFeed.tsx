@@ -73,6 +73,7 @@ export default function CameraFeed({
   });
 
   const { latest, status } = useLive();
+  const running = status?.processing?.status === "running";
 
   // Poll for demo video URL (set after file upload)
   useEffect(() => {
@@ -122,8 +123,11 @@ export default function CameraFeed({
     return () => ro.disconnect();
   }, []);
 
-  // Draw overlays on canvas (both when video is playing and idle)
+  // Draw overlays on canvas — only over the local demo video. The live
+  // backend MJPEG stream already carries the OpenCV-rendered overlays
+  // server-side, so drawing here too would duplicate them.
   useEffect(() => {
+    if (!demoUrl) return;
     const canvas = overlayRef.current;
     const video = videoRef.current;
     if (!canvas) return;
@@ -658,20 +662,12 @@ export default function CameraFeed({
           flowDirectionAngle={flowDirectionAngle}
         />
       ) : (
-        <>
-          <img
-            src={src}
-            alt="Live river camera"
-            className="absolute inset-0 h-full w-full object-contain"
-            onError={() => setFailed(true)}
-          />
-          <canvas
-            ref={overlayRef}
-            width={1280}
-            height={720}
-            className="pointer-events-none absolute inset-0 z-20 h-full w-full"
-          />
-        </>
+        <img
+          src={src}
+          alt="Live river camera"
+          className="absolute inset-0 h-full w-full object-contain"
+          onError={() => setFailed(true)}
+        />
       )}
 
       {showStatus && (
@@ -681,10 +677,12 @@ export default function CameraFeed({
               ? "bg-sky-900/80 text-sky-200 border border-sky-700"
               : failed
               ? "bg-slate-900/80 text-slate-400 border border-slate-700"
-              : "bg-emerald-900/80 text-emerald-200 border border-emerald-700"
+              : running
+              ? "bg-emerald-900/80 text-emerald-200 border border-emerald-700"
+              : "bg-slate-900/80 text-slate-300 border border-slate-600"
           }`}
         >
-          {demoUrl ? "● DEMO VIDEO" : failed ? "● SIMULATION" : "● LIVE"}
+          {demoUrl ? "● DEMO VIDEO" : failed ? "● SIMULATION" : running ? "● LIVE" : "● STANDBY"}
         </span>
       )}
     </div>

@@ -105,7 +105,7 @@ def video_stream(max_seconds: float | None = None) -> StreamingResponse:
                 time.sleep(0.2)
                 continue
             yield (f"{boundary}Content-Type: image/jpeg\r\nContent-Length: {len(jpeg)}\r\n\r\n").encode() + jpeg + b"\r\n"
-            time.sleep(1.0 / 20.0)
+            time.sleep(1.0 / 30.0)
 
     return StreamingResponse(generate(), media_type="multipart/x-mixed-replace; boundary=frame")
 

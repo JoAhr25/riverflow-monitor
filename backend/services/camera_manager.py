@@ -214,6 +214,7 @@ class CameraManager:
             frame_times.append(now)
             h, w = frame.shape[:2]
             roi = self._resolve_roi(cfg.get("camera", {}).get("roi"), w, h)
+            roi_configured = roi is not None
 
             if roi is not None:
                 rx, ry, rw, rh = roi
@@ -241,24 +242,32 @@ class CameraManager:
             vectors = (last_flow_result or {}).get("vectors", [])
             hud = [
                 f"SRC: {self.state.source['mode_label'] if self.state.source else source.label}",
-                f"FRAME {frame_idx}" + (f" / {meta.frame_count}" if meta.frame_count else ""),
-                f"PROC FPS: {self._measured_fps(frame_times):.1f}" + (f"  VIDEO FPS: {meta.fps:.1f}" if meta.fps else ""),
+                f"FRAME: {frame_idx}" + (f"/{meta.frame_count}" if meta.frame_count else ""),
+                f"FPS: {self._measured_fps(frame_times):.1f}" + (f" (video {meta.fps:.1f})" if meta.fps else ""),
                 f"TIME: {datetime.now().strftime('%H:%M:%S')}",
             ]
             if last_flow_result is not None:
-                hud.append(
-                    f"MOTION: {last_flow_result['image_motion']:.2f} px  DIR: {last_flow_result['direction_deg']:.0f} deg"
-                )
-            hud.append(f"DEBRIS: {len(last_detections)}" + (f"  TRACKED: {tracker.unique_total}" if tracker.unique_total else ""))
+                hud.append(f"MOTION: {last_flow_result['image_motion']:.2f} px/s")
+                hud.append(f"DIRECTION: {last_flow_result['direction_deg']:.0f} deg")
+            hud.append(f"DEBRIS: {len(last_detections)}" + (f" ({tracker.unique_total} tracked)" if tracker.unique_total else ""))
 
             warn = None
             if last_flow_result is not None and not last_flow_result.get("calibrated"):
-                warn = "UNCALIBRATED - image-space measurement (px), NOT m/s"
+                warn = "UNCALIBRATED - px, not m/s"
             detector_active = detector_info.get("status") == "ready"
             if not detector_active:
                 hud.append("DEBRIS AI: not configured")
 
-            annotated = draw_overlays(frame, roi, vectors, last_detections, last_edge, hud, overlays_cfg, warn_line=warn)
+            annotated = draw_overlays(
+                frame,
+                roi if roi_configured else None,
+                vectors,
+                last_detections,
+                last_edge,
+                hud,
+                overlays_cfg,
+                warn_line=warn,
+            )
             jpeg = encode_jpeg(annotated)
 
             payload = self._build_payload(
