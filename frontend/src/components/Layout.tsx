@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useLive } from "../services/live";
-import { authApi } from "../services/api";
+import { authApi, hasSession } from "../services/api";
 import StatusDot from "./StatusDot";
 import Footer from "./Footer";
 import { Logo } from "./Logo";
@@ -121,7 +121,7 @@ export default function Layout() {
             <span className="text-xs text-slate-500 dark:text-slate-400">
               Last update: <span className="font-mono">{lastUpdate ? lastUpdate.replace("T", " ") : "--:--:--"}</span>
             </span>
-            {status?.auth_required && (
+            {(status?.auth_required || hasSession()) && (
               <button
                 onClick={async () => {
                   try {

@@ -65,6 +65,10 @@ async function handle<T>(resp: Response): Promise<T> {
 
 let localUserSession: string | null = localStorage.getItem("rf_user");
 
+export function hasSession(): boolean {
+  return Boolean(auth.currentUser || localUserSession);
+}
+
 export const authApi = {
   async check(): Promise<{ ok: boolean; auth_required: boolean; user?: string }> {
     if (auth.currentUser) {
@@ -74,40 +78,32 @@ export const authApi = {
       return { ok: true, auth_required: true, user: localUserSession };
     }
     try {
-      return await handle(await rfFetch("/api/auth/check"));
+      const res = await handle<{ ok: boolean; auth_required: boolean; user?: string }>(
+        await rfFetch("/api/auth/check"),
+      );
+      if (res.auth_required === false) {
+        // Backend has no accounts configured; the webapp still requires its own sign-in.
+        return { ok: false, auth_required: true };
+      }
+      return { ok: Boolean(res.ok), auth_required: true, user: res.user };
     } catch {
-      return { ok: true, auth_required: false };
+      // No backend reachable: Firebase authentication works standalone.
+      return { ok: false, auth_required: true };
     }
   },
 
   async login(username: string, password: string): Promise<{ ok: boolean; user: string }> {
+    // Plain usernames are mapped onto an internal Firebase email suffix,
+    // so users sign in with just a username (e.g. "jgalanto").
+    const email = username.includes("@") ? username : `${username.trim().toLowerCase()}@riverflow.app`;
     try {
-      if (username.includes("@")) {
-        const res = await signInWithEmailAndPassword(auth, username, password);
-        const userEmail = res.user.email || username;
-        localStorage.setItem("rf_user", userEmail);
-        localUserSession = userEmail;
-        return { ok: true, user: userEmail };
-      }
+      await signInWithEmailAndPassword(auth, email, password);
+      const display = username.trim().toLowerCase();
+      localStorage.setItem("rf_user", display);
+      localUserSession = display;
+      return { ok: true, user: display };
     } catch {
-      /* fallback */
-    }
-
-    try {
-      const res = await handle<{ ok: boolean; user: string }>(
-        await rfFetch("/api/auth/login", {
-          method: "POST",
-          headers: jsonHeaders,
-          body: JSON.stringify({ username, password }),
-        }),
-      );
-      localStorage.setItem("rf_user", res.user || username);
-      localUserSession = res.user || username;
-      return res;
-    } catch {
-      localStorage.setItem("rf_user", username);
-      localUserSession = username;
-      return { ok: true, user: username };
+      throw new Error("Invalid username or password.");
     }
   },
 

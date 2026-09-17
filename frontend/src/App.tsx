@@ -93,8 +93,8 @@ export default function App() {
     const check = () => {
       authApi
         .check()
-        .then(() => {
-          if (!cancelled) setAuthState("ok");
+        .then((res) => {
+          if (!cancelled) setAuthState(res.ok ? "ok" : "login");
         })
         .catch(() => {
           if (!cancelled) setAuthState("login");
