@@ -21,12 +21,12 @@ import {
 } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: ((import.meta as unknown as { env?: Record<string, string> }).env?.VITE_FIREBASE_API_KEY) || "AIzaSyDemoKeyForRiverFlowMonitor4ddd9",
+  apiKey: "AIzaSyDZgOzgyGmiYDERY34H-tW3vANqG4VJ9kc",
   authDomain: "riverflow-monitor-4ddd9.firebaseapp.com",
   projectId: "riverflow-monitor-4ddd9",
   storageBucket: "riverflow-monitor-4ddd9.firebasestorage.app",
-  messagingSenderId: "100000000000",
-  appId: "1:100000000000:web:riverflowmonitor4ddd9",
+  messagingSenderId: "148695893657",
+  appId: "1:148695893657:web:168343e4858c913f419a08",
 };
 
 export const firebaseApp = initializeApp(firebaseConfig);
