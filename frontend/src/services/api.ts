@@ -102,8 +102,21 @@ export const authApi = {
       localStorage.setItem("rf_user", display);
       localUserSession = display;
       return { ok: true, user: display };
-    } catch {
-      throw new Error("Invalid username or password.");
+    } catch (err) {
+      const code = (err as { code?: string }).code || "";
+      if (code.includes("operation-not-allowed")) {
+        throw new Error("Email/Password sign-in is not enabled. Firebase Console → Authentication → Sign-in method → enable Email/Password.");
+      }
+      if (code.includes("network")) {
+        throw new Error("Cannot reach Firebase Authentication. Check your internet connection.");
+      }
+      if (code.includes("too-many-requests")) {
+        throw new Error("Too many attempts. Wait a minute and try again.");
+      }
+      if (code.includes("invalid-credential") || code.includes("user-not-found") || code.includes("wrong-password")) {
+        throw new Error("Invalid username or password.");
+      }
+      throw new Error(`Sign-in failed (${code || "unknown error"}).`);
     }
   },
 
