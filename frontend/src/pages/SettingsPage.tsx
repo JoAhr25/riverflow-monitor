@@ -3,7 +3,7 @@ import Card from "../components/Card";
 import EmptyState from "../components/EmptyState";
 import PageHeader from "../components/PageHeader";
 import { Button, Field, Toggle, inputClass } from "../components/Field";
-import { api } from "../services/api";
+import { api, getApiBase, setApiBase } from "../services/api";
 import { useLive } from "../services/live";
 import type { AppConfig } from "../types";
 
@@ -13,6 +13,7 @@ export default function SettingsPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [backendUrl, setBackendUrl] = useState(getApiBase());
 
   useEffect(() => {
     api.getConfig().then(setConfig).catch((err) => setError((err as Error).message));
@@ -79,6 +80,43 @@ export default function SettingsPage() {
             All mock values are flagged and displayed as DEMO MODE — never mixed silently with real measurements.
           </p>
         </div>
+      </Card>
+
+      <Card title="Remote Backend" subtitle="Connect this webapp to a Python backend running anywhere">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+          <Field label="Backend base URL" hint="e.g. a Cloudflare Tunnel URL exposing http://127.0.0.1:8000 on your laptop or Mini PC. Empty = same origin (demo mode when no backend exists).">
+            <input
+              value={backendUrl}
+              onChange={(e) => setBackendUrl(e.target.value)}
+              placeholder="https://your-tunnel.trycloudflare.com"
+              className={inputClass}
+            />
+          </Field>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => {
+                setApiBase(backendUrl);
+                window.location.reload();
+              }}
+            >
+              Connect
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setApiBase("");
+                setBackendUrl("");
+                window.location.reload();
+              }}
+            >
+              Reset
+            </Button>
+          </div>
+        </div>
+        <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+          The URL is stored in this browser only (localStorage). REST, WebSocket and the live video stream all
+          route through it, so the hosted webapp behaves exactly like the local one while that backend is reachable.
+        </p>
       </Card>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
