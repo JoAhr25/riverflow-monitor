@@ -24,13 +24,17 @@ export default function LoginPage({ onSuccess }: { onSuccess: () => void }) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4 dark:bg-slate-950">
-      <div className="w-full max-w-sm">
-        <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div className="relative flex min-h-screen items-center justify-center bg-slate-100 p-4 dark:bg-slate-950">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,color-mix(in_srgb,var(--color-brand-500)_18%,transparent),transparent)]"
+      />
+      <div className="relative w-full max-w-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-xl shadow-brand-900/10 dark:border-slate-800 dark:bg-slate-900">
           <div className="mb-6 flex flex-col items-center gap-3">
-            <Logo size={52} />
+            <Logo size={56} />
             <div className="text-center">
-              <h1 className="text-lg font-bold text-slate-900 dark:text-white">RiverFlow Monitor</h1>
+              <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">RiverFlow Monitor</h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">Real-Time Non-Contact River Monitoring System</p>
             </div>
           </div>

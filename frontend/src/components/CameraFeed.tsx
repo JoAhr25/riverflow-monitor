@@ -682,7 +682,7 @@ export default function CameraFeed({
               : "bg-slate-900/80 text-slate-300 border border-slate-600"
           }`}
         >
-          {demoUrl ? "● DEMO VIDEO" : failed ? "● SIMULATION" : running ? "● LIVE" : "● STANDBY"}
+          {demoUrl ? "● DEMO VIDEO" : failed ? "● SIMULATION" : running ? "● LIVE" : "○ NO SIGNAL"}
         </span>
       )}
     </div>

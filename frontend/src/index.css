@@ -2,6 +2,26 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Brand palette extracted from the riverflow logo
+   primary #1460A2 (deep ocean blue) · accent #3FA7C9 (flow cyan) */
+@theme {
+  --color-brand-50: #ECF5FC;
+  --color-brand-100: #D7E9F9;
+  --color-brand-200: #AFD5F3;
+  --color-brand-300: #7FB9EA;
+  --color-brand-400: #4D9BDF;
+  --color-brand-500: #1F7CD1;
+  --color-brand-600: #1460A2;
+  --color-brand-700: #104F86;
+  --color-brand-800: #0D3F6C;
+  --color-brand-900: #0A3054;
+  --color-brand-950: #07233B;
+  --color-accent-300: #91D2DE;
+  --color-accent-400: #6ABECF;
+  --color-accent-500: #3FA7C9;
+  --color-accent-600: #2984B0;
+}
+
 html,
 body,
 #root {
@@ -11,6 +31,10 @@ body,
 body {
   @apply bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased;
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-brand-500) 30%, transparent);
 }
 
 ::-webkit-scrollbar {

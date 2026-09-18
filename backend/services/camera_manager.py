@@ -212,6 +212,10 @@ class CameraManager:
             frame_idx += 1
             now = time.time()
             frame_times.append(now)
+            # Hot-reload overlay flags so the UI toggles apply mid-run
+            # without restarting processing (refreshed ~5x per second).
+            if frame_idx % 5 == 1:
+                overlays_cfg = self.config.get().get("overlays", overlays_cfg)
             h, w = frame.shape[:2]
             roi = self._resolve_roi(cfg.get("camera", {}).get("roi"), w, h)
             roi_configured = roi is not None

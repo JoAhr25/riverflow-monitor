@@ -78,5 +78,8 @@ backend/tests/sample_moving.*
 # TypeScript build info
 frontend/*.tsbuildinfo
 
+# Original logo artwork (asset copy lives in frontend/public/)
+riverflow logo.png
+
 # Thesis draft (kept out of the public repo; delete this line to publish it)
 Thesis Paper.docx

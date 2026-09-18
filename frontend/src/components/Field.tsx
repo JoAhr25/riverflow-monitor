@@ -9,7 +9,7 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
 }
 
 export const inputClass =
-  "w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100";
+  "w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100";
 
 export function Button({
   children,
@@ -27,7 +27,8 @@ export function Button({
   type?: "button" | "submit";
 }) {
   const variants = {
-    primary: "bg-sky-600 text-white hover:bg-sky-500 disabled:bg-sky-900/50",
+    primary:
+      "bg-gradient-to-b from-brand-500 to-brand-600 text-white shadow-sm hover:from-brand-400 hover:to-brand-500 disabled:from-brand-900/60 disabled:to-brand-900/60 disabled:shadow-none",
     secondary:
       "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700",
     danger: "bg-rose-600 text-white hover:bg-rose-500 disabled:bg-rose-900/50",
@@ -54,7 +55,7 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
       aria-pressed={checked}
     >
       <span
-        className={`relative h-5 w-9 rounded-full transition ${checked ? "bg-sky-600" : "bg-slate-300 dark:bg-slate-700"}`}
+        className={`relative h-5 w-9 rounded-full transition ${checked ? "bg-brand-600" : "bg-slate-300 dark:bg-slate-700"}`}
       >
         <span
           className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${checked ? "left-4.5" : "left-0.5"}`}

@@ -31,6 +31,16 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
   const wsRef = useRef<WebSocket | null>(null);
   const retryRef = useRef(0);
   const timerRef = useRef<number | null>(null);
+  const lastTsRef = useRef<string | null>(null);
+
+  // Single ingestion path for measurements: dedupes by timestamp so the
+  // polling fallback never double-appends what the WebSocket already pushed.
+  const ingest = useCallback((m: LiveMeasurement) => {
+    if (lastTsRef.current === m.timestamp) return;
+    lastTsRef.current = m.timestamp;
+    setLatest(m);
+    setMeasurements((prev) => [...prev.slice(-(MAX_POINTS - 1)), m]);
+  }, []);
 
   const refreshStatus = useCallback(() => {
     api.getStatus()
@@ -69,12 +79,10 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
           const data = JSON.parse(event.data);
           if (data.type === "snapshot") {
             if (data.measurement) {
-              setLatest(data.measurement);
-              setMeasurements((prev) => [...prev.slice(-(MAX_POINTS - 1)), data.measurement]);
+              ingest(data.measurement);
             }
           } else {
-            setLatest(data);
-            setMeasurements((prev) => [...prev.slice(-(MAX_POINTS - 1)), data]);
+            ingest(data);
           }
         } catch {
           /* ignore malformed */
@@ -114,20 +122,19 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const fetchLatest = () => {
+      // The WebSocket already pushes real-time updates when connected;
+      // this poll is the fallback (demo mode / reconnect gaps) only.
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) return;
       api.getLatest()
         .then((res) => {
-          if (res?.measurement) {
-            setLatest(res.measurement);
-            setMeasurements((prev) => [...prev.slice(-(MAX_POINTS - 1)), res.measurement!]);
-          }
+          if (res?.measurement) ingest(res.measurement);
         })
         .catch(() => {});
     };
     fetchLatest();
-    // 1 s tick for smooth live chart animation in demo mode
     const intervalId = window.setInterval(fetchLatest, 1000);
     return () => window.clearInterval(intervalId);
-  }, []);
+  }, [ingest]);
 
   const value = useMemo(
     () => ({ connected, measurements, latest, status, statusError, refreshStatus }),

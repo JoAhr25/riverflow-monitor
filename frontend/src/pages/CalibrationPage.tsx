@@ -72,6 +72,20 @@ export default function CalibrationPage() {
         description="Physical velocity (m/s) and discharge (m³/s) cannot be derived from image pixels without real calibration. Every field below starts unconfigured and must come from actual field measurements."
       />
 
+      {summary && (
+        <div
+          className={`rounded-lg border px-4 py-2.5 text-sm font-medium ${
+            summary.velocity_calibrated
+              ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+              : "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+          }`}
+        >
+          {summary.velocity_calibrated
+            ? "CALIBRATED — velocity is reported in m/s and discharge in m³/s."
+            : "UNCALIBRATED — flow values are reported in image pixels (px), not physical units."}
+        </div>
+      )}
+
       {message && <div className="rounded-lg border border-sky-300 bg-sky-50 px-4 py-2.5 text-sm text-sky-700 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300">{message}</div>}
 
       <Card title="Calibration Status">

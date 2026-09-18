@@ -6,17 +6,37 @@ import StatusDot from "./StatusDot";
 import Footer from "./Footer";
 import { Logo } from "./Logo";
 
-const NAV = [
-  { to: "/", label: "Dashboard", icon: "M3 13h2v8H3v-8zm4-6h2v14H7V7zm4 3h2v11h-2V10zm4-7h2v18h-2V3z" },
-  { to: "/live-camera", label: "Live Camera", icon: "M15 10l6-4v12l-6-4M3 6h12v12H3V6z" },
-  { to: "/flow", label: "Flow Analysis", icon: "M4 12h14m0 0l-4-4m4 4l-4 4M20 4v16" },
-  { to: "/water-level", label: "Water Level", icon: "M4 18c2 0 3-1.5 5-1.5S11 18 13 18s3-1.5 5-1.5M3 12h18M7 12V6a2 2 0 012-2h6a2 2 0 012 2v6" },
-  { to: "/debris", label: "Debris Detection", icon: "M5 8h14l-1.5 11h-11L5 8zm3 0V6a4 4 0 018 0v2" },
-  { to: "/history", label: "Historical Data", icon: "M4 20V6m0 14h16M8 16v-5m4 5V8m4 8v-8" },
-  { to: "/validation", label: "Testing & Validation", icon: "M9 12l2 2 4-5m6 3a9 9 0 11-18 0 9 9 0 0118 0z" },
-  { to: "/calibration", label: "Calibration", icon: "M12 3v3m0 12v3m9-9h-3M6 12H3m13.5-6.5l-2 2m-5 9l-2 2m11 0l-2-2m-9-9l-2-2M14 12a2 2 0 11-4 0 2 2 0 014 0z" },
-  { to: "/system", label: "System Status", icon: "M5 12h4m6 0h4M12 5v4m0 6v4M8.5 8.5l-3-3m13 0l-3 3m-7 7l-3 3m13 0l-3-3" },
-  { to: "/settings", label: "Settings", icon: "M10.5 6h3M4 10v4m16-4v4M10.5 18h3M8 4h8v4H8V4zm-4 12h8v4H4v-4zm12 0h4v4h-4v-4z" },
+const NAV_GROUPS: { label: string; items: { to: string; label: string; icon: string }[] }[] = [
+  {
+    label: "Monitoring",
+    items: [
+      { to: "/", label: "Dashboard", icon: "M3 13h2v8H3v-8zm4-6h2v14H7V7zm4 3h2v11h-2V10zm4-7h2v18h-2V3z" },
+      { to: "/live-camera", label: "Live Camera", icon: "M15 10l6-4v12l-6-4M3 6h12v12H3V6z" },
+    ],
+  },
+  {
+    label: "Analysis",
+    items: [
+      { to: "/flow", label: "Flow Analysis", icon: "M4 12h14m0 0l-4-4m4 4l-4 4M20 4v16" },
+      { to: "/water-level", label: "Water Level", icon: "M4 18c2 0 3-1.5 5-1.5S11 18 13 18s3-1.5 5-1.5M3 12h18M7 12V6a2 2 0 012-2h6a2 2 0 012 2v6" },
+      { to: "/debris", label: "Debris Detection", icon: "M5 8h14l-1.5 11h-11L5 8zm3 0V6a4 4 0 018 0v2" },
+    ],
+  },
+  {
+    label: "Data",
+    items: [
+      { to: "/history", label: "Historical Data", icon: "M4 20V6m0 14h16M8 16v-5m4 5V8m4 8v-8" },
+      { to: "/validation", label: "Testing & Validation", icon: "M9 12l2 2 4-5m6 3a9 9 0 11-18 0 9 9 0 0118 0z" },
+    ],
+  },
+  {
+    label: "System",
+    items: [
+      { to: "/calibration", label: "Calibration", icon: "M12 3v3m0 12v3m9-9h-3M6 12H3m13.5-6.5l-2 2m-5 9l-2 2m11 0l-2-2m-9-9l-2-2M14 12a2 2 0 11-4 0 2 2 0 014 0z" },
+      { to: "/system", label: "System Status", icon: "M5 12h4m6 0h4M12 5v4m0 6v4M8.5 8.5l-3-3m13 0l-3 3m-7 7l-3 3m13 0l-3-3" },
+      { to: "/settings", label: "Settings", icon: "M10.5 6h3M4 10v4m16-4v4M10.5 18h3M8 4h8v4H8V4zm-4 12h8v4H4v-4zm12 0h4v4h-4v-4z" },
+    ],
+  },
 ];
 
 function ThemeToggle() {
@@ -57,11 +77,12 @@ export default function Layout() {
       <aside
         className={`${menuOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-40 w-60 shrink-0 border-r border-slate-200 bg-white transition-transform dark:border-slate-800 dark:bg-slate-900 md:sticky md:top-0 md:h-screen md:translate-x-0`}
       >
-        <div className="flex h-14 items-center gap-2.5 border-b border-slate-200 px-4 dark:border-slate-800">
+        <div className="h-1 w-full bg-gradient-to-r from-accent-500 via-brand-500 to-brand-700" aria-hidden="true" />
+        <div className="flex h-13 items-center gap-2.5 border-b border-slate-200 px-4 py-3 dark:border-slate-800">
           <Logo size={30} />
           <div className="min-w-0 leading-tight">
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold text-slate-900 dark:text-white">RiverFlow Monitor</span>
+              <span className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">RiverFlow Monitor</span>
               <span className="rounded bg-slate-200 px-1.5 py-px font-mono text-[9px] font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                 v0.1.0
               </span>
@@ -69,26 +90,45 @@ export default function Layout() {
             <div className="truncate text-[10px] tracking-wide text-slate-500 dark:text-slate-400">Non-Contact River Monitoring</div>
           </div>
         </div>
-        <nav className="space-y-0.5 overflow-y-auto p-2">
-          {NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === "/"}
-              onClick={() => setMenuOpen(false)}
-              className={({ isActive }) =>
-                `flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition ${
-                  isActive
-                    ? "bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300"
-                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-                }`
-              }
-            >
-              <svg className="h-4.5 w-4.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-              </svg>
-              {item.label}
-            </NavLink>
+        <nav className="space-y-3 overflow-y-auto p-2 pb-6">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.label}>
+              <div className="px-3 pb-1 pt-2 text-[10px] font-semibold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                {group.label}
+              </div>
+              <div className="space-y-0.5">
+                {group.items.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.to === "/"}
+                    onClick={() => setMenuOpen(false)}
+                    className={({ isActive }) =>
+                      `relative flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition ${
+                        isActive
+                          ? "bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300"
+                          : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        {isActive && (
+                          <span
+                            aria-hidden="true"
+                            className="absolute top-1.5 bottom-1.5 left-0 w-1 rounded-full bg-gradient-to-b from-accent-500 to-brand-600"
+                          />
+                        )}
+                        <svg className="h-4.5 w-4.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                        </svg>
+                        {item.label}
+                      </>
+                    )}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
       </aside>
