@@ -82,6 +82,38 @@ export default function SettingsPage() {
         </div>
       </Card>
 
+      <Card title="Water-Level Alerts" subtitle="Threshold-based warning and danger states, evaluated on every measurement">
+        <div className="flex items-center justify-between gap-4">
+          <Toggle
+            checked={config.alerts.enabled}
+            onChange={(v) => set((d) => { d.alerts.enabled = v; })}
+            label="Enable water-level alerts"
+          />
+          <p className="max-w-md text-right text-xs text-slate-500 dark:text-slate-400">
+            When enabled, a banner appears as soon as the water level crosses a threshold, and a browser
+            notification fires (if you allowed notifications) when the state changes.
+          </p>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <Field label="Warning threshold (m)" hint="Banner appears at or above this level">
+            <input
+              value={config.alerts.level_warning_m ?? ""}
+              onChange={(e) => set((d) => { d.alerts.level_warning_m = e.target.value.trim() === "" ? null : Number(e.target.value); })}
+              placeholder="e.g. 1.5"
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Danger threshold (m)" hint="Should be higher than the warning threshold">
+            <input
+              value={config.alerts.level_danger_m ?? ""}
+              onChange={(e) => set((d) => { d.alerts.level_danger_m = e.target.value.trim() === "" ? null : Number(e.target.value); })}
+              placeholder="e.g. 2.0"
+              className={inputClass}
+            />
+          </Field>
+        </div>
+      </Card>
+
       <Card title="Remote Backend" subtitle="Connect this webapp to a Python backend running anywhere">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
           <Field label="Backend base URL" hint="e.g. a Cloudflare Tunnel URL exposing http://127.0.0.1:8000 on your laptop or Mini PC. Empty = same origin (demo mode when no backend exists).">

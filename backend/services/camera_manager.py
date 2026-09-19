@@ -249,6 +249,11 @@ class CameraManager:
             if frame_idx % frame_interval == 0:
                 flow_result = estimator.process_frame(gray_roi)
                 if flow_result is not None:
+                    # Discharge (m3/s) is only computed when velocity is
+                    # calibrated AND cross-section area and velocity
+                    # correction are configured (see FlowEstimator.discharge).
+                    if flow_result.get("calibrated") and flow_result.get("value") is not None:
+                        flow_result["discharge"] = estimator.discharge(float(flow_result["value"]))
                     last_flow_result = flow_result
                 if cfg.get("water_level", {}).get("camera_edge", {}).get("enabled", True):
                     last_edge = edge_detector.detect(gray_roi)
@@ -326,6 +331,20 @@ class CameraManager:
         flow_part = None
         if flow is not None:
             flow_part = {k: v for k, v in flow.items() if k != "vectors"}
+
+        # Water-level alert evaluation (thresholds from config; evaluated
+        # fresh on every measurement, never persisted as history yet).
+        alerts_cfg = self.config.get().get("alerts", {})
+        water_alert: str | None = None
+        level = water_level.get("value") if water_level else None
+        if alerts_cfg.get("enabled") and isinstance(level, (int, float)):
+            danger = alerts_cfg.get("level_danger_m")
+            warning = alerts_cfg.get("level_warning_m")
+            if danger is not None and level >= float(danger):
+                water_alert = "danger"
+            elif warning is not None and level >= float(warning):
+                water_alert = "warning"
+
         src = self.state.source or {}
         return {
             "timestamp": datetime.now().isoformat(timespec="seconds"),
@@ -349,6 +368,14 @@ class CameraManager:
             },
             "lidar_status": lidar.get("status"),
             "lora": {"status": self.state.lora.get("status"), "mock": self.state.lora.get("mock")},
+            "alerts": {
+                "water_level": water_alert,
+                "thresholds": {
+                    "enabled": bool(alerts_cfg.get("enabled")),
+                    "warning_m": alerts_cfg.get("level_warning_m"),
+                    "danger_m": alerts_cfg.get("level_danger_m"),
+                },
+            },
             "demo_mode": self.state.demo_mode,
         }
 

@@ -14,12 +14,16 @@ export default function LiveChart({
   unit,
   height = 220,
   yDomain,
+  compare,
+  compareLabel = "comparison",
 }: {
   data: ChartPoint[];
   color?: string;
   unit?: string;
   height?: number;
   yDomain?: [number | string, number | string];
+  compare?: ChartPoint[];
+  compareLabel?: string;
 }) {
   if (data.length === 0) {
     return (
@@ -87,6 +91,20 @@ export default function LiveChart({
             activeDot={{ r: 3, strokeWidth: 0 }}
             isAnimationActive={false}
           />
+          {compare && compare.length > 0 && (
+            <Area
+              type="monotone"
+              dataKey="v"
+              data={compare}
+              stroke={color}
+              strokeOpacity={0.65}
+              strokeWidth={1.2}
+              strokeDasharray="5 4"
+              fill="transparent"
+              isAnimationActive={false}
+              name={compareLabel}
+            />
+          )}
         </AreaChart>
       </ResponsiveContainer>
     </div>

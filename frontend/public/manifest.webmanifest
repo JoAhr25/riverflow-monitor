@@ -1,0 +1,13 @@
+{
+  "name": "RiverFlow Monitor",
+  "short_name": "RiverFlow",
+  "description": "Real-time non-contact river monitoring: water level, surface velocity and debris detection.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5FAFB",
+  "theme_color": "#17869F",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

@@ -49,11 +49,15 @@ export default function CameraFeed({
   showStatus = true,
   overlays,
   flowDirectionAngle,
+  roiDrawMode = false,
+  onRoiDrawn,
 }: {
   className?: string;
   showStatus?: boolean;
   overlays?: Overlays;
   flowDirectionAngle?: number;
+  roiDrawMode?: boolean;
+  onRoiDrawn?: (roi: number[] | null) => void;
 }) {
   const ov = overlays ?? { roi: true, flow_vectors: true, debris_boxes: true, water_edge: true, hud: true };
 
@@ -64,6 +68,8 @@ export default function CameraFeed({
   const videoRef = useRef<HTMLVideoElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number | null>(null);
+  const [roiDrag, setRoiDrag] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
+  const roiStartRef = useRef<{ x: number; y: number } | null>(null);
   const particlesRef = useRef<FlowParticle[]>(initParticles(45));
   const lastTimeRef = useRef<number>(performance.now());
   const debrisPosRef = useRef<{ x: number; y: number; trail: { x: number; y: number }[] }>({
@@ -668,6 +674,65 @@ export default function CameraFeed({
           className="absolute inset-0 h-full w-full object-contain"
           onError={() => setFailed(true)}
         />
+      )}
+
+      {roiDrawMode && (
+        <div
+          className="absolute inset-0 z-40 cursor-crosshair touch-none bg-slate-950/30"
+          onPointerDown={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            roiStartRef.current = { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
+            setRoiDrag(null);
+            e.currentTarget.setPointerCapture(e.pointerId);
+          }}
+          onPointerMove={(e) => {
+            const s = roiStartRef.current;
+            if (!s) return;
+            const r = e.currentTarget.getBoundingClientRect();
+            const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+            const y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+            setRoiDrag({ x0: s.x, y0: s.y, x1: x, y1: y });
+          }}
+          onPointerUp={(e) => {
+            e.currentTarget.releasePointerCapture(e.pointerId);
+            const s = roiStartRef.current;
+            roiStartRef.current = null;
+            if (!s) return;
+            const r = e.currentTarget.getBoundingClientRect();
+            const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+            const y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+            const rx = Math.min(s.x, x);
+            const ry = Math.min(s.y, y);
+            const rw = Math.abs(x - s.x);
+            const rh = Math.abs(y - s.y);
+            if (rw >= 0.03 && rh >= 0.03) {
+              onRoiDrawn?.([
+                Number(rx.toFixed(4)),
+                Number(ry.toFixed(4)),
+                Number(rw.toFixed(4)),
+                Number(rh.toFixed(4)),
+              ]);
+            } else {
+              onRoiDrawn?.(null);
+            }
+            setRoiDrag(null);
+          }}
+        >
+          {roiDrag && (
+            <div
+              className="absolute border-2 border-accent-400 bg-sky-400/15"
+              style={{
+                left: `${Math.min(roiDrag.x0, roiDrag.x1) * 100}%`,
+                top: `${Math.min(roiDrag.y0, roiDrag.y1) * 100}%`,
+                width: `${Math.abs(roiDrag.x1 - roiDrag.x0) * 100}%`,
+                height: `${Math.abs(roiDrag.y1 - roiDrag.y0) * 100}%`,
+              }}
+            />
+          )}
+          <span className="pointer-events-none absolute inset-x-0 top-1/2 text-center text-[11px] font-semibold tracking-widest text-white uppercase drop-shadow-md">
+            drag to select the water region
+          </span>
+        </div>
       )}
 
       {showStatus && (

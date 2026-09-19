@@ -12,7 +12,20 @@ import type { UploadedVideoInfo } from "../types";
 type Mode = "upload" | "camera" | "stream";
 
 export default function LiveCameraPage() {
-  const { status, refreshStatus } = useLive();
+  const { status, latest, refreshStatus } = useLive();
+  const [roiDrawMode, setRoiDrawMode] = useState(false);
+  const [pendingRoi, setPendingRoi] = useState<number[] | null>(null);
+
+  const applyRoi = async (roi: number[] | null) => {
+    try {
+      await api.updateConfig({ camera: { roi } } as unknown as Record<string, unknown>);
+      setPendingRoi(null);
+      setRoiDrawMode(false);
+      refreshStatus();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
   const [mode, setMode] = useState<Mode>("upload");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -124,13 +137,60 @@ export default function LiveCameraPage() {
       )}
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
-        <Card title="Camera Feed" className="xl:col-span-2" subtitle={sourceInfo ? `${sourceInfo.mode_label} — ${sourceInfo.label} (${sourceInfo.width}×${sourceInfo.height}${sourceInfo.fps ? ` @ ${sourceInfo.fps.toFixed(0)} fps` : ""})` : "No active source"}>
-          <CameraFeed overlays={overlays} flowDirectionAngle={flowDirection} />
-          {sourceInfo && sourceInfo.frame_count != null && (
-            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-              {sourceInfo.frame_count} frames · duration {sourceInfo.duration_s?.toFixed(2) ?? "?"} s
+        <Card
+          title="Camera Feed"
+          className="xl:col-span-2"
+          subtitle={sourceInfo ? `${sourceInfo.mode_label} — ${sourceInfo.label} (${sourceInfo.width}×${sourceInfo.height}${sourceInfo.fps ? ` @ ${sourceInfo.fps.toFixed(0)} fps` : ""})` : "No active source"}
+          actions={
+            <div className="flex items-center gap-1.5">
+              {roiDrawMode ? (
+                <Button variant="ghost" onClick={() => { setRoiDrawMode(false); setPendingRoi(null); }}>
+                  Cancel
+                </Button>
+              ) : (
+                <Button variant="secondary" onClick={() => setRoiDrawMode(true)}>
+                  Draw ROI
+                </Button>
+              )}
+            </div>
+          }
+        >
+          <CameraFeed
+            overlays={overlays}
+            flowDirectionAngle={flowDirection}
+            roiDrawMode={roiDrawMode}
+            onRoiDrawn={(roi) => setPendingRoi(roi)}
+          />
+
+          {roiDrawMode && !pendingRoi && (
+            <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500">
+              Drag a rectangle over the water surface. It applies to optical flow, water-edge detection and
+              overlays, and takes effect on the next processing run.
             </p>
           )}
+
+          {pendingRoi && (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-sky-300 bg-sky-50 px-3 py-2 text-xs dark:border-sky-700 dark:bg-sky-950/40">
+              <span className="font-mono text-sky-800 dark:text-sky-300">
+                Selected ROI: x {pendingRoi[0]} · y {pendingRoi[1]} · w {pendingRoi[2]} · h {pendingRoi[3]}
+              </span>
+              <span className="flex gap-2">
+                <Button onClick={() => applyRoi(pendingRoi)}>Apply ROI</Button>
+                <Button variant="ghost" onClick={() => setPendingRoi(null)}>Discard</Button>
+              </span>
+            </div>
+          )}
+
+          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 border-t border-slate-100 pt-2 font-mono text-[11px] tracking-wide text-slate-400 dark:border-slate-800/60 dark:text-slate-500">
+            <span>coverage {latest?.flow?.coverage != null ? `${(latest.flow.coverage * 100).toFixed(0)}%` : "—"}</span>
+            <span>camera {latest?.camera?.fps != null ? `${latest.camera.fps.toFixed(1)} fps` : "—"}</span>
+            <span>frame {latest?.camera?.frames ?? "—"}</span>
+            {sourceInfo?.frame_count != null && (
+              <span>
+                {sourceInfo.frame_count} frames · {sourceInfo.duration_s?.toFixed(2) ?? "?"} s
+              </span>
+            )}
+          </div>
         </Card>
 
         <div className="space-y-5">

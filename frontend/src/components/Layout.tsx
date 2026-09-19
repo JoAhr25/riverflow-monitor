@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useLive } from "../services/live";
 import { authApi, hasSession } from "../services/api";
@@ -46,6 +46,28 @@ function ThemeToggle() {
 export default function Layout() {
   const { connected, latest, status } = useLive();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const waterAlert = latest?.alerts?.water_level ?? null;
+  const prevAlertRef = useRef<string | null>(null);
+
+  // Browser notification on alert transitions (only when the user has
+  // already granted permission — the app never nags for it).
+  useEffect(() => {
+    if (
+      waterAlert &&
+      waterAlert !== prevAlertRef.current &&
+      typeof Notification !== "undefined" &&
+      Notification.permission === "granted"
+    ) {
+      new Notification(
+        waterAlert === "danger"
+          ? "RiverFlow Monitor — water level above DANGER threshold"
+          : "RiverFlow Monitor — water level above warning threshold",
+        { icon: "/riverflow-logo.png" },
+      );
+    }
+    prevAlertRef.current = waterAlert;
+  }, [waterAlert]);
 
   const online = status?.system_online === true;
   const processing = status?.processing?.status === "running";
@@ -181,6 +203,35 @@ export default function Layout() {
       {status?.demo_mode && (
         <div className="border-b border-fuchsia-500/20 bg-fuchsia-500/10 px-4 py-1.5 text-center text-[11px] font-semibold tracking-wide text-fuchsia-300">
           DEMO MODE — simulated values, not real measurements
+        </div>
+      )}
+
+      {/* Water-level alert banner */}
+      {waterAlert && (
+        <div
+          role="alert"
+          className={`flex flex-wrap items-center justify-center gap-x-2 px-4 py-2 text-center text-xs font-semibold tracking-wide ${
+            waterAlert === "danger"
+              ? "bg-rose-600 text-white"
+              : "bg-amber-400/90 text-amber-950"
+          }`}
+        >
+          <span>{waterAlert === "danger" ? "WATER LEVEL ABOVE DANGER THRESHOLD" : "Water level above warning threshold"}</span>
+          {latest?.water_level?.value != null && (
+            <span className="font-mono">
+              {latest.water_level.value.toFixed(2)} m
+              {latest.alerts?.thresholds.danger_m != null && waterAlert === "danger" && ` (limit ${latest.alerts.thresholds.danger_m} m)`}
+              {latest.alerts?.thresholds.warning_m != null && waterAlert === "warning" && ` (limit ${latest.alerts.thresholds.warning_m} m)`}
+            </span>
+          )}
+          {typeof Notification !== "undefined" && Notification.permission === "default" && (
+            <button
+              className="rounded-sm border border-current px-1.5 py-px text-[10px] font-bold uppercase"
+              onClick={() => Notification.requestPermission()}
+            >
+              Enable notifications
+            </button>
+          )}
         </div>
       )}
 

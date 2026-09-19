@@ -70,6 +70,11 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "storage": {
         "log_interval_s": 1.0,
     },
+    "alerts": {
+        "enabled": False,
+        "level_warning_m": None,
+        "level_danger_m": None,
+    },
 }
 
 

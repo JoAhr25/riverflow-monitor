@@ -34,19 +34,27 @@ Everything measured is either real or clearly labeled. See
 - **Live camera monitoring** with server-rendered overlays: ROI brackets,
   speed-colored flow arrows, debris boxes, water-edge line, and a telemetry
   HUD — toggleable mid-run without restarting processing
+- **Draw the ROI directly on the video** (drag a rectangle on the camera
+  frame instead of typing coordinates)
 - **Real-time dashboard**: water level, surface motion (px) or velocity (m/s
-  when calibrated), debris counts, flow direction, live charts
+  when calibrated), discharge (m³/s when fully calibrated), debris counts,
+  flow direction, live charts
+- **Water-level alerts**: configurable warning/danger thresholds with banner
+  and browser notifications
 - **Three honest run modes**: full (local backend), remote backend (tunnel or
   cloud URL), and clearly-labeled demo mode when no backend is reachable
 - **Firebase authentication** with plain-username login (accounts managed in
   the Firebase Console — no credentials in code)
-- **SQLite history** with time-range filtering and CSV export
+- **SQLite history** with time-range filtering, period comparison, CSV export
+  and a printable summary report
 - **Calibration workflow** that gates physical units: px values are never
   displayed as m/s until a real m/px scale exists
 - **Sensors & comms services**: TF-Luna serial, LoRa payload service (mocks
   only under demo mode, always flagged)
 - **Video management**: upload, process, and remove development videos;
   4K inputs are automatically downscaled for real-time processing
+- **Installable app (PWA)**: add to home screen; the shell loads offline
+  while data always comes live
 
 ## Technology Stack
 
@@ -104,8 +112,9 @@ riverflow-monitor/
 │       │                     History, Validation, Calibration, System, Settings, Login
 │       ├── services/         api (REST + auth), live (WebSocket), firebase, demo engine
 │       └── types/            shared API payload types
-├── docs/                     architecture documentation
-├── .github/workflows/        CI (backend pytest + frontend build)
+├── docs/                     architecture, hardware wiring, debris-model guide
+├── deploy/raspberry-pi/      systemd service + Pi setup instructions
+├── .github/workflows/        CI (backend pytest + frontend tests & build)
 ├── Dockerfile                single-container deployment
 └── firebase.json             Firebase Hosting configuration
 ```
@@ -204,6 +213,9 @@ python -m pytest backend/tests -q
 
 # Backend: live smoke test (requires the backend running)
 python backend/tests/smoke_live.py
+
+# Frontend: unit tests (chart helpers, statistics)
+cd frontend && npm run test
 
 # Frontend: strict type-check + production build
 cd frontend && npm run build

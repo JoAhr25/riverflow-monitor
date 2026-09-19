@@ -21,6 +21,12 @@ export interface FlowPayload {
   frame_interval: number | null;
   source_fps: number | null;
   status: string;
+  discharge?: { available: boolean; flow_rate_m3s?: number; reason?: string };
+}
+
+export interface AlertsPayload {
+  water_level: string | null;
+  thresholds: { enabled: boolean; warning_m: number | null; danger_m: number | null };
 }
 
 export interface DebrisDetection {
@@ -65,6 +71,7 @@ export interface LiveMeasurement {
   camera: CameraInfo;
   lidar_status?: string;
   lora?: { status: string; mock?: boolean };
+  alerts?: AlertsPayload;
   demo_mode?: boolean;
 }
 
@@ -134,6 +141,7 @@ export interface AppConfig {
   };
   overlays: { roi: boolean; flow_vectors: boolean; debris_boxes: boolean; water_edge: boolean; hud: boolean };
   storage: { log_interval_s: number };
+  alerts: { enabled: boolean; level_warning_m: number | null; level_danger_m: number | null };
 }
 
 export interface CalibrationData {

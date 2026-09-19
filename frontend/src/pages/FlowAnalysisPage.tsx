@@ -62,6 +62,19 @@ export default function FlowAnalysisPage() {
               accent="sky"
               sub="ROI grid cells with motion above threshold"
             />
+            {flow.calibrated && (
+              <MetricCard
+                label="Discharge"
+                value={flow.discharge?.available && flow.discharge.flow_rate_m3s != null ? flow.discharge.flow_rate_m3s.toFixed(3) : "--"}
+                unit="m³/s"
+                accent={flow.discharge?.available ? "emerald" : "amber"}
+                sub={
+                  flow.discharge?.available
+                    ? "velocity × cross-section area × velocity correction"
+                    : (flow.discharge?.reason ?? "Requires calibrated velocity, cross-section area and velocity correction factor")
+                }
+              />
+            )}
           </div>
 
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">

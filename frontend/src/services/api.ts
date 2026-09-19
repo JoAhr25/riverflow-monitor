@@ -369,6 +369,7 @@ export const api = {
         },
         overlays: { roi: true, flow_vectors: true, debris_boxes: true, water_edge: true, hud: true },
         storage: { log_interval_s: 60 },
+        alerts: { enabled: false, level_warning_m: null, level_danger_m: null },
       };
     }
   },

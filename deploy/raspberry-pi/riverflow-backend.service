@@ -1,0 +1,16 @@
+[Unit]
+Description=RiverFlow Monitor backend (FastAPI river monitoring)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Adjust to wherever the repository lives on the Pi:
+WorkingDirectory=/home/pi/riverflow-monitor/backend
+ExecStart=/usr/bin/python3 main.py --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=5
+User=pi
+
+[Install]
+WantedBy=multi-user.target
