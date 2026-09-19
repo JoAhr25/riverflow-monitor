@@ -632,7 +632,7 @@ export default function CameraFeed({
   return (
     <div
       ref={containerRef}
-      className={`relative aspect-video w-full overflow-hidden rounded-xl border border-slate-800 bg-black ${className}`}
+      className={`viewfinder relative aspect-video w-full overflow-hidden rounded-md border border-slate-800 bg-black ${className}`}
     >
       {/* Priority: uploaded demo video > live stream > error / idle canvas */}
       {demoUrl ? (
@@ -672,7 +672,7 @@ export default function CameraFeed({
 
       {showStatus && (
         <span
-          className={`absolute top-2 right-2 z-30 rounded px-2 py-0.5 text-[10px] font-bold tracking-widest ${
+          className={`absolute top-2.5 right-2.5 z-30 flex items-center gap-1.5 rounded-sm px-2 py-0.5 text-[10px] font-semibold tracking-[0.12em] ${
             demoUrl
               ? "bg-sky-900/80 text-sky-200 border border-sky-700"
               : failed
@@ -682,7 +682,10 @@ export default function CameraFeed({
               : "bg-slate-900/80 text-slate-300 border border-slate-600"
           }`}
         >
-          {demoUrl ? "● DEMO VIDEO" : failed ? "● SIMULATION" : running ? "● LIVE" : "○ NO SIGNAL"}
+          {(running || demoUrl) && (
+            <span className={`pulse-dot h-1.5 w-1.5 rounded-full ${running ? "bg-emerald-300" : "bg-sky-300"}`} aria-hidden="true" />
+          )}
+          {demoUrl ? "DEMO VIDEO" : failed ? "SIMULATION" : running ? "LIVE" : "NO SIGNAL"}
         </span>
       )}
     </div>

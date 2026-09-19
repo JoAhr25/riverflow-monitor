@@ -2,24 +2,62 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Brand palette extracted from the riverflow logo
-   primary #1460A2 (deep ocean blue) · accent #3FA7C9 (flow cyan) */
+/* ═══════════════════════════════════════════════════════════════════
+   RiverFlow Monitor — design system
+
+   Palette from the logo's true family: aqua-teal water tones
+   (#3FA7C9 · #2984B0 · #91D2DE · #C3E9EC). Light-first, quiet surfaces,
+   hairline structure, editorial metrics. The viewfinder motif is
+   reserved for the camera frame only.
+   ═══════════════════════════════════════════════════════════════════ */
 @theme {
-  --color-brand-50: #ECF5FC;
-  --color-brand-100: #D7E9F9;
-  --color-brand-200: #AFD5F3;
-  --color-brand-300: #7FB9EA;
-  --color-brand-400: #4D9BDF;
-  --color-brand-500: #1F7CD1;
-  --color-brand-600: #1460A2;
-  --color-brand-700: #104F86;
-  --color-brand-800: #0D3F6C;
-  --color-brand-900: #0A3054;
-  --color-brand-950: #07233B;
-  --color-accent-300: #91D2DE;
-  --color-accent-400: #6ABECF;
-  --color-accent-500: #3FA7C9;
-  --color-accent-600: #2984B0;
+  /* Brand — deep aqua / river teal */
+  --color-brand-50: #EFFAFC;
+  --color-brand-100: #D8F2F7;
+  --color-brand-200: #B4E5EF;
+  --color-brand-300: #83D3E4;
+  --color-brand-400: #4BBBD2;
+  --color-brand-500: #29A3C0;
+  --color-brand-600: #17869F;
+  --color-brand-700: #136B83;
+  --color-brand-800: #12566B;
+  --color-brand-900: #12485A;
+  --color-brand-950: #0A2E3C;
+
+  /* Accent — flow cyan + mist highlights */
+  --color-accent-300: #C3E9EC;
+  --color-accent-400: #91D2DE;
+  --color-accent-500: #5FBBD0;
+  --color-accent-600: #3FA7C9;
+
+  /* Interaction ramp (sky remap) — river aqua */
+  --color-sky-50: #F0FBFD;
+  --color-sky-100: #DFF6FA;
+  --color-sky-200: #BAEDF5;
+  --color-sky-300: #8AE0EE;
+  --color-sky-400: #52CCE0;
+  --color-sky-500: #29AEC9;
+  --color-sky-600: #178CA8;
+  --color-sky-700: #147187;
+  --color-sky-800: #145D73;
+  --color-sky-900: #144D60;
+  --color-sky-950: #0A3242;
+
+  /* Neutrals (slate remap) — teal-cast river stone */
+  --color-slate-50: #F5FAFB;
+  --color-slate-100: #EAF4F6;
+  --color-slate-200: #D7E9EC;
+  --color-slate-300: #B7D4DA;
+  --color-slate-400: #7FAAB4;
+  --color-slate-500: #548491;
+  --color-slate-600: #3D6B78;
+  --color-slate-700: #2E5460;
+  --color-slate-800: #1B3D4A;
+  --color-slate-900: #122E39;
+  --color-slate-950: #07202B;
+
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", -apple-system, system-ui, Roboto, "Helvetica Neue", sans-serif;
+  --font-mono: "Cascadia Mono", ui-monospace, "SF Mono", Consolas, "Roboto Mono", monospace;
 }
 
 html,
@@ -29,22 +67,108 @@ body,
 }
 
 body {
-  @apply bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  @apply bg-slate-50 text-slate-700 antialiased dark:bg-slate-950 dark:text-slate-200;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1.55;
+  letter-spacing: 0.005em;
+}
+
+/* Quiet topographic water texture — barely-there contour lines */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='560' viewBox='0 0 560 560'%3E%3Cg fill='none' stroke='%2317869F' stroke-opacity='0.05' stroke-width='1'%3E%3Cpath d='M-40 120 C 120 60, 240 190, 420 120 S 620 40, 700 110'/%3E%3Cpath d='M-40 220 C 130 160, 260 300, 440 220 S 640 140, 720 210'/%3E%3Cpath d='M-40 330 C 140 270, 270 410, 450 330 S 650 250, 730 320'/%3E%3Cpath d='M-40 440 C 120 380, 250 520, 430 440 S 630 360, 710 430'/%3E%3Cpath d='M-40 550 C 130 490, 260 630, 440 550 S 640 470, 720 540'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+html.dark body::after {
+  opacity: 0.6;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='560' viewBox='0 0 560 560'%3E%3Cg fill='none' stroke='%238AE0EE' stroke-opacity='0.04' stroke-width='1'%3E%3Cpath d='M-40 120 C 120 60, 240 190, 420 120 S 620 40, 700 110'/%3E%3Cpath d='M-40 220 C 130 160, 260 300, 440 220 S 640 140, 720 210'/%3E%3Cpath d='M-40 330 C 140 270, 270 410, 450 330 S 650 250, 730 320'/%3E%3Cpath d='M-40 440 C 120 380, 250 520, 430 440 S 630 360, 710 430'/%3E%3Cpath d='M-40 550 C 130 490, 260 630, 440 550 S 640 470, 720 540'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+#root {
+  position: relative;
+  z-index: 1;
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--color-brand-500) 30%, transparent);
+  background: color-mix(in srgb, var(--color-sky-300) 55%, transparent);
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   @apply bg-slate-300 dark:bg-slate-700;
-  border-radius: 6px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400 dark:bg-slate-600;
+}
+
+/* ── System utilities ────────────────────────────────────────────── */
+
+/* Quiet label: section eyebrows and field labels */
+.micro-label {
+  @apply text-[10.5px] font-medium tracking-[0.08em] text-slate-400 uppercase dark:text-slate-500;
+}
+
+/* Viewfinder frame — reserved for the camera only */
+.viewfinder {
+  position: relative;
+}
+.viewfinder::before,
+.viewfinder::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  opacity: 0.85;
+  z-index: 10;
+}
+.viewfinder::before {
+  top: 6px;
+  left: 6px;
+  border-top: 2px solid var(--color-accent-400);
+  border-left: 2px solid var(--color-accent-400);
+}
+.viewfinder::after {
+  bottom: 6px;
+  right: 6px;
+  border-bottom: 2px solid var(--color-accent-400);
+  border-right: 2px solid var(--color-accent-400);
+}
+
+/* Live pulse — a breathing dot for real-time states */
+@keyframes rf-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.pulse-dot {
+  animation: rf-pulse 2.2s ease-in-out infinite;
+}
+
+/* Metric value: editorial numerals */
+.metric-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+  line-height: 1;
 }

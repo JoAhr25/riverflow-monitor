@@ -66,6 +66,29 @@ def list_sources() -> dict[str, Any]:
     return {"sources": reg.camera_manager.list_sources()}
 
 
+@router.delete("/{video_id}")
+def delete_video(video_id: str) -> dict[str, Any]:
+    """Delete an uploaded video from the uploads directory.
+
+    Only files inside the uploads directory can be removed; repository
+    videos under data/raw are not deletable through the API.
+    """
+    reg = get_registry()
+    if reg.camera_manager.is_running():
+        raise HTTPException(status_code=409, detail="Stop the running analysis before deleting a video.")
+
+    safe = _safe_name(video_id)
+    if Path(safe).suffix.lower() not in {".mp4", ".mov", ".avi", ".mkv", ".webm", ".m4v"}:
+        raise HTTPException(status_code=400, detail="Not a video file.")
+    dest = (UPLOAD_DIR / safe).resolve()
+    if dest.parent != UPLOAD_DIR.resolve():
+        raise HTTPException(status_code=400, detail="Invalid video id.")
+    if not dest.exists():
+        raise HTTPException(status_code=404, detail="Video not found.")
+    dest.unlink()
+    return {"deleted": safe}
+
+
 @router.get("/frame")
 def current_frame() -> StreamingResponse:
     reg = get_registry()

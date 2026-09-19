@@ -1,356 +1,289 @@
-# RiverFlow Monitor — Web Application
+# RiverFlow Monitor
 
 ![FastAPI](https://img.shields.io/badge/backend-FastAPI-009688?logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/frontend-React_19-149ECA?logo=react&logoColor=white)
 ![OpenCV](https://img.shields.io/badge/processing-OpenCV-5C3EE8?logo=opencv&logoColor=white)
-![Docker](https://img.shields.io/badge/deploy-Docker-2496ED?logo=docker&logoColor=white)
+![Firebase](https://img.shields.io/badge/auth%20%2B%20hosting-Firebase-FFCA28?logo=firebase&logoColor=black)
+![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?logo=githubactions&logoColor=white)
 
-**Real-Time Non-Contact River Monitoring System**
+**Real-Time Non-Contact River Monitoring System** — a web application that
+measures water level, surface velocity, and floating debris from video and
+LiDAR without touching the water, and visualizes everything in a live
+dashboard.
 
-Visualization and monitoring interface for the river monitoring research project.
-The final system is a live camera-based monitoring platform; PyORC is used
-separately as a testing/calibration/validation tool for the LSPIV component
-(see *PyORC role* below).
+## Overview
 
+River monitoring today mostly means contact instruments (staff gauges,
+current meters, float sensors) that are expensive, dangerous to install
+during floods, and prone to damage and theft. RiverFlow Monitor explores a
+non-contact alternative: a camera and a compact LiDAR on the riverbank, a
+Raspberry Pi running the analysis, and a web dashboard that anyone can open
+from anywhere.
+
+The system measures:
+
+- **Water level** — TF-Luna ToF LiDAR (primary sensor)
+- **Surface velocity** — optical flow / LSPIV-style image analysis
+- **Floating debris** — optional YOLO detection with unique-object tracking
+
+Everything measured is either real or clearly labeled. See
+*[Scientific integrity rules](#scientific-integrity-rules-enforced-by-this-system)*.
+
+## Features
+
+- **Live camera monitoring** with server-rendered overlays: ROI brackets,
+  speed-colored flow arrows, debris boxes, water-edge line, and a telemetry
+  HUD — toggleable mid-run without restarting processing
+- **Real-time dashboard**: water level, surface motion (px) or velocity (m/s
+  when calibrated), debris counts, flow direction, live charts
+- **Three honest run modes**: full (local backend), remote backend (tunnel or
+  cloud URL), and clearly-labeled demo mode when no backend is reachable
+- **Firebase authentication** with plain-username login (accounts managed in
+  the Firebase Console — no credentials in code)
+- **SQLite history** with time-range filtering and CSV export
+- **Calibration workflow** that gates physical units: px values are never
+  displayed as m/s until a real m/px scale exists
+- **Sensors & comms services**: TF-Luna serial, LoRa payload service (mocks
+  only under demo mode, always flagged)
+- **Video management**: upload, process, and remove development videos;
+  4K inputs are automatically downscaled for real-time processing
+
+## Technology Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 19, TypeScript, Vite 7, Tailwind CSS 4, Recharts |
+| Backend | Python 3.11+, FastAPI, Uvicorn, OpenCV, NumPy |
+| Database | SQLite |
+| Computer vision | Farneback optical flow, block-PIV (LSPIV), Sobel water-edge, optional YOLO (ultralytics) |
+| Sensors / hardware | TF-Luna ToF LiDAR (serial), Raspberry Pi camera (V4L2), RTSP streams, LoRa uplink |
+| Auth & hosting | Firebase Authentication, Firebase Hosting |
+| Deployment | Docker (single container), cloudflared/ngrok tunnels, Render/Railway/Fly.io compatible |
+
+## System Architecture
+
+```mermaid
+flowchart TB
+    subgraph Station["River station"]
+        CAM["Pi camera"] --> LOOP
+        LIDAR["TF-Luna LiDAR"] --> LOOP
+    end
+    subgraph Backend["Backend — FastAPI + OpenCV"]
+        LOOP["Processing loop (~25 fps on 1080p)"]
+        LOOP --> OV["Overlay renderer"]
+        LOOP --> DB[("SQLite")]
+        LOOP --> API["REST + WebSocket"]
+    end
+    OV -->|"MJPEG annotated stream"| UI["React dashboard"]
+    API -->|"live measurements"| UI
+    LOOP -.-> LORA["LoRa uplink"]
 ```
-River
-  ↓
-Raspberry Pi NoIR Camera Module 3
-  ↓
-Raspberry Pi 3 — Live Camera Processing
-  ├── Water Edge Detection (supplementary cue)
-  ├── Surface Motion / LSPIV Flow Processing
-  └── AI Debris Detection
-  ↓
-Measurements (water level · flow · debris)
-  ├── Local timestamped logging (SQLite)
-  └── LoRa → Gateway → Cloud/Web Dashboard
-```
 
-TF-Luna ToF LiDAR is the **primary** water-level sensor. The camera water-edge
-detector is an independent visual cue only.
+The frontend never computes measurements — it displays what the backend
+measured. Full details: [docs/architecture.md](docs/architecture.md).
 
----
-
-## Scientific integrity rules enforced by this system
-
-- Image-space motion (px) is **never** silently displayed as m/s. Without a
-  configured physical scale the dashboard shows pixels and a clear
-  "uncalibrated" status.
-- Discharge (m³/s) is never computed without calibrated velocity,
-  cross-section area **and** a justified velocity correction factor.
-- Debris detection returns **no detections** until a real model is configured.
-- Sensors report honest states (`offline`, `not_connected`) — nothing is
-  simulated unless DEMO MODE is explicitly enabled, and mock values are always
-  flagged.
-- Calibration fields start as "not configured" and must be filled from real
-  field measurements.
-
----
-
-## Architecture
+## Project Structure
 
 ```
 riverflow-monitor/
-├── Dockerfile                    single-container deployment (frontend+backend)
-├── frontend/                     React + Vite + TypeScript + Tailwind + Recharts
+├── backend/                  Python + FastAPI + OpenCV
+│   ├── main.py               app entry (uvicorn), WebSocket /ws/live
+│   ├── api/                  REST routers (video, measurements, config, calibration, validation)
+│   ├── services/             camera manager (processing loop), overlay renderer, state, broadcast
+│   ├── processing/           optical_flow, lspiv, flow_estimator, calibration, water_edge,
+│   │                         debris_detector, tracking, pyorc_adapter, camera sources
+│   ├── sensors/              TF-Luna LiDAR serial service
+│   ├── communication/        LoRa service (modular, honest status)
+│   ├── database/             SQLite storage
+│   ├── models/               request schemas
+│   └── tests/                pytest suite + live smoke test
+├── frontend/                 React + Vite + TypeScript + Tailwind
 │   └── src/
-│       ├── components/           Layout, cards, charts, camera feed, compass…
-│       ├── pages/                Dashboard, Live Camera, Flow Analysis, Water
-│       │                         Level, Debris, Historical Data, Testing &
-│       │                         Validation, Calibration, System Status, Settings
-│       ├── services/             REST client + WebSocket live-feed context
-│       └── types/                shared API payload types
-└── backend/                      Python + FastAPI + OpenCV
-    ├── main.py                   app entry point (uvicorn), WebSocket /ws/live
-    ├── paths.py                  data/upload directory resolution
-    ├── api/                      REST routers (measurements, video/analysis,
-    │                             config, calibration, validation)
-    ├── services/                 camera manager (processing loop), overlay
-    │                             renderer, broadcast, config, shared state
-    ├── processing/               optical_flow.py (Farneback), lspiv.py (block
-    │                             PIV), flow_estimator.py (calibration
-    │                             gating), calibration.py, water_edge.py,
-    │                             debris_detector.py, tracking.py,
-    │                             pyorc_adapter.py (optional), camera.py
-    ├── sensors/tf_luna.py        TF-Luna serial service (mock under demo mode)
-    ├── communication/lora.py     LoRa service (modular, honest status)
-    ├── database/database.py      SQLite storage (measurements + validation tests)
-    ├── models/                   request schemas
-    └── tests/                    pytest suite + live smoke test
+│       ├── components/       Layout, camera feed, cards, charts, controls
+│       ├── pages/            Dashboard, Live Camera, Flow, Water Level, Debris,
+│       │                     History, Validation, Calibration, System, Settings, Login
+│       ├── services/         api (REST + auth), live (WebSocket), firebase, demo engine
+│       └── types/            shared API payload types
+├── docs/                     architecture documentation
+├── .github/workflows/        CI (backend pytest + frontend build)
+├── Dockerfile                single-container deployment
+└── firebase.json             Firebase Hosting configuration
 ```
 
-This repository contains only the web application. The research workflow
-(notebooks, PyORC analysis, docs) lives in the separate `river-video-pyorc`
-repository. Videos placed in `data/raw/` at this repository's root are
-listed as available development-video sources, same as before.
-
-The `FlowProcessor` abstraction (`processing/optical_flow.py`,
-`processing/lspiv.py`) lets the backend swap Farneback optical flow, block-PIV
-LSPIV or a future PyORC-backed processor without touching the frontend.
-The `DebrisDetector` is a model-loading architecture (YOLO via `ultralytics`)
-with a centroid tracker for unique-object counting.
-
----
+The research workflow (notebooks, PyORC analysis) lives in the separate
+`river-video-pyorc` repository — this repository contains the web application.
 
 ## Installation
 
-### Backend
+```bash
+git clone https://github.com/JoAhr25/riverflow-monitor.git
+cd riverflow-monitor
+```
 
-Use the project's main Python environment (or any Python ≥ 3.11):
+**Backend** (Python ≥ 3.11):
 
-```cmd
+```bash
 cd backend
 python -m pip install -r requirements.txt
 ```
 
-Optional extras (only when the hardware/model is available):
-`pyserial` (TF-Luna + LoRa serial), `ultralytics` (YOLO debris model),
-`pyopenrivercam` (PyORC adapter inside this env).
+Optional extras (install only when the hardware/model is available):
+`pyserial` (LiDAR + LoRa serial), `ultralytics` (YOLO debris),
+`pyopenrivercam` (PyORC reference PIV).
 
-### Frontend
+**Frontend** (Node.js ≥ 20):
 
-Requires Node.js ≥ 20:
-
-```cmd
+```bash
 cd frontend
 npm install
 ```
 
----
+## Environment Variables
 
-## Running locally
+All variables are **optional** — the app runs with zero configuration
+locally. See [`.env.example`](.env.example) for the full list with safe
+placeholders:
 
-Terminal 1 — backend (FastAPI + WebSocket on port 8000):
+| Variable | Purpose |
+|---|---|
+| `VITE_API_BASE_URL` | Point the hosted frontend at a remote backend |
+| `RIVERFLOW_CORS_ORIGINS` | Restrict API CORS to exact origins (production) |
+| `RIVERFLOW_FRONTEND_DIST` | Custom frontend build path for the backend |
+| `RIVERFLOW_AUTH_USER` / `_PASSWORD` / `_SECRET` | Optional backend session auth |
 
-```cmd
-python backend\main.py
-```
+The Firebase web configuration is committed by design in
+`frontend/src/services/firebase.ts` — it is public identifier data protected
+by Firebase security rules, not a secret.
 
-Terminal 2 — frontend (Vite dev server on port 5173, proxies `/api` and `/ws`
-to the backend):
+## Running the Application
 
-```cmd
+Two terminals:
+
+```bash
+# 1 — backend (FastAPI + WebSocket + video stream on :8000)
+python backend/main.py
+
+# 2 — frontend (Vite dev server on :5173, proxies /api and /ws)
 cd frontend
 npm run dev
 ```
 
-Open **http://localhost:5173**
+Open **http://localhost:5173**. Interactive API docs:
+http://127.0.0.1:8000/docs
 
-Interactive API docs: http://127.0.0.1:8000/docs
+Sign in with the account configured in your Firebase project
+(Authentication → Users). Login accepts a plain username — the app appends
+an internal `@riverflow.app` suffix before talking to Firebase.
 
-### Development video mode (Phase 1)
+### Processing a development video
 
-1. Open **Live Camera** → *Dev Video* tab.
-2. Upload `IMG_9373 (1).MOV` (or any video). Files already present in
-   `data/raw/` are listed without re-uploading.
-3. Optionally set the water ROI and playback speed, then **Start Processing**.
-4. The dashboard shows the live MJPEG feed with real overlays (ROI, flow
-   vectors, water edge, debris boxes, HUD), image-space motion values, and
-   live-updating graphs. Measurements are stored in SQLite every
-   `storage.log_interval_s` seconds.
+1. **Live Camera** → *Dev Video* → upload any H.264 MP4 (4K is downscaled
+   automatically; HEVC/H.265 is not decodable — re-encode first).
+2. **Start Processing** — the feed shows real overlays; charts and metrics
+   update live; rows are written to SQLite.
+3. Videos can be removed with the trash button next to **Start**.
 
-Known result from the notebook for comparison: average image movement of the
-own video is ~6.9 px per 30-frame interval (X ≈ +2.75, Y ≈ −0.78) — the
-webapp's per-interval numbers are expected to differ because the default
-`frame_interval` is 5, not 30.
+Videos placed in `data/raw/` (repository root, gitignored) are listed as
+available sources without uploading.
 
-### Live camera mode (Raspberry Pi / webcam)
+## Building
 
-**Live Camera** → *Live Camera* tab → device index (0 default). On a
-Raspberry Pi this opens the Camera Module through OpenCV/V4L2
-(`picamera2`/libcamera backend can be added in `processing/camera.py`).
-Resolution/FPS from Settings are applied on open.
-
-### Remote stream mode
-
-**Live Camera** → *Stream** tab → RTSP/HTTP URL, opened through OpenCV FFMPEG.
-
-### Streaming design choice
-
-The prototype uses **MJPEG over HTTP** (`GET /api/video/stream`) — the
-simplest reliable option for a local-network monitoring dashboard. The frame
-pipeline is source-agnostic, so HLS/WebRTC can be added later by serving the
-same annotated frames through another transport.
-
----
-
-## PyORC testing mode (separate from live monitoring)
-
-PyORC stays in the research workflow (separate `river-video-pyorc` repository,
-`pyorc_env`, pyorc 0.5.3 — the version verified in that repository's
-notebooks). The webapp **never** requires PyORC:
-
-- `processing/pyorc_adapter.py` reports honest availability. In the default
-  webapp environment it answers "not installed" and points to `pyorc_env`.
-- The **Testing & Validation** page shows the adapter status and the presence
-  of `data/config/camera_config.json`.
-- With pyorc installed and a real camera config present,
-  `PyORCAdapter.run_reference_piv(video_path, camera_config_path)` runs
-  projection + PIV for reference flow computation. Version-sensitive APIs
-  must be inspected before use (per the repository's own troubleshooting
-  notes).
-
-The Ngwerere example is a learning dataset only and is never treated as
-project data.
-
----
-
-## Calibration
-
-The **Calibration** page shows the true state of: camera calibration (file
-check), GCPs, physical scale (m/px), CRS, reference elevation, cross-section
-area and the velocity correction factor. Setting a physical scale immediately
-switches flow output from `px` (uncalibrated) to `m/s` (labeled *uniform scale
-approximation*). Everything starts unconfigured.
-
----
-
-## Database
-
-SQLite at `backend/data/appdata/riverflow.db`:
-
-- `measurements` — timestamp, water_level, lidar_distance, camera_water_edge,
-  flow_rate, surface_velocity, velocity_unit, calibrated, image_motion,
-  motion_x/y, direction_deg, debris_count, camera/lidar/lora status, source,
-  camera_fps.
-- `validation_tests` — reference vs measured values for tank/field experiments
-  with computed error/accuracy.
-
-Query via `GET /api/history?hours=24`, export CSV from the Historical Data
-page. The API is source-agnostic: local processing and (future) LoRa-gateway
-ingest write the same rows.
-
-## WebSocket
-
-`/ws/live` pushes every processed measurement:
-
-```json
-{
-  "timestamp": "…",
-  "water_level": { "value": 1.24, "unit": "m" },
-  "flow": { "value": null, "unit": null, "calibrated": false,
-            "image_motion": 6.89, "image_motion_unit": "px" },
-  "debris": { "count": 3 },
-  "camera": { "fps": 30 }
-}
+```bash
+cd frontend
+npm run build     # tsc type-check + vite production build → frontend/dist
 ```
 
-The frontend keeps a live buffer (max 900 points) shared by all charts and
-reconnects automatically.
-
----
-
-## LoRa / cloud (future integration)
-
-Final architecture: Pi → Pi Zero/LoRa node → LoRa → gateway → internet → web
-backend → dashboard. The browser never touches LoRa hardware. During
-development the LoRa service honestly reports `not connected`.
-`communication/lora.py` provides `build_payload()` / `send()` and a mock link
-that activates only under DEMO MODE (flagged in the UI).
-
----
+The backend serves `frontend/dist` on the same port as the API (single-port
+deployment) when it exists.
 
 ## Testing
 
-Backend unit/integration tests (synthetic moving-pattern video — no fake
-data, real optical flow on real pixels):
-
-```cmd
-cd backend
-python -m pytest tests
-```
-
-Live smoke test (requires the backend running):
-
-```cmd
-python tests\smoke_live.py
-```
-
-Frontend type-check/build:
-
-```cmd
-cd frontend
-npm run build
-```
-
----
-
-## Deployment (public access)
-
-Build the frontend once — the backend then serves dashboard + API + WebSocket
-on a single port:
-
-```cmd
-cd frontend
-npm run build
-python backend\main.py --host 0.0.0.0 --port 8000
-```
-
-`RIVERFLOW_FRONTEND_DIST` overrides the dist path (defaults to
-`frontend/dist`).
-
-### Option A — quick share via tunnel (no server needed)
-
-Run the backend as above, then expose it with a tunnel:
-
-```cmd
-cloudflared tunnel --url http://127.0.0.1:8000
-```
-
-(or `ngrok http 8000`). The printed `https://…` URL is reachable by anyone
-while your machine and the tunnel stay running. WebSockets and MJPEG work
-through the tunnel.
-
-### Option B — cloud server / VPS (always on)
-
 ```bash
-# on the server, with the repository copied over and Docker installed
+# Backend: unit/integration tests (synthetic video, real optical flow — no fake data)
+python -m pytest backend/tests -q
 
-docker build -t riverflow-monitor .
-docker run -d -p 8000:8000 --restart unless-stopped \
-  -v riverflow-data:/app/data/appdata riverflow-monitor
+# Backend: live smoke test (requires the backend running)
+python backend/tests/smoke_live.py
+
+# Frontend: strict type-check + production build
+cd frontend && npm run build
 ```
 
-The dashboard is then available at `http://<server-ip>:8000` (put Caddy/nginx
-with HTTPS in front for a proper domain). The same image deploys to
-Render / Railway / Fly.io.
+CI runs the backend tests and the frontend build on every push/PR
+([.github/workflows/ci.yml](.github/workflows/ci.yml)).
+
+## Deployment
+
+| Target | How |
+|---|---|
+| **Firebase Hosting** (frontend only) | `npm run build` in `frontend/`, then `firebase deploy --only hosting` from the repo root |
+| **Quick share / thesis demo** | Run the backend, expose it: `cloudflared tunnel --url http://127.0.0.1:8000`, then paste the URL in *Settings → Remote Backend* on the hosted site |
+| **Single container** | `docker build -t riverflow-monitor .` then `docker run -p 8000:8000 riverflow-monitor` |
+| **Cloud (Render/Railway/Fly.io)** | Deploy the Dockerfile; set `RIVERFLOW_AUTH_*` and a long password |
 
 Note: a public instance lets anyone upload videos and control processing —
-enable authentication (below) before sharing widely. Long term, the intended
-remote architecture is Pi → LoRa → gateway → cloud backend → dashboard.
+enable authentication before sharing widely.
 
----
+## Scientific integrity rules enforced by this system
 
-## Authentication (public deployments)
+- Image-space motion (px) is **never** silently displayed as m/s; without a
+  configured physical scale the dashboard shows pixels and an "uncalibrated" status.
+- Discharge (m³/s) is never computed without calibrated velocity, cross-section
+  area, and a justified velocity correction factor.
+- Debris detection returns **no detections** until a real model is configured.
+- Sensors report honest states (`offline`, `not_connected`); nothing is
+  simulated unless DEMO MODE is enabled, and mock values are always flagged.
+- Calibration fields start as "not configured" and must come from real field
+  measurements.
 
-The dashboard supports login-protected mode, **disabled by default** so local
-development is unchanged. Enable it with environment variables:
+## PyORC role (research workflow, not a runtime dependency)
 
-| Variable | Meaning |
+PyORC stays in the separate `river-video-pyorc` repository (`pyorc_env`,
+pyorc 0.5.3). This webapp never requires it: `processing/pyorc_adapter.py`
+reports honest availability ("not installed" by default), and the
+**Testing & Validation** page shows the adapter status. With pyorc installed
+and a real camera config present, the adapter runs projection + PIV for
+reference flow computation. The Ngwerere example is a learning dataset only.
+
+## Troubleshooting
+
+| Problem | Fix |
 |---|---|
-| `RIVERFLOW_AUTH_USER` | login username (empty = auth disabled) |
-| `RIVERFLOW_AUTH_PASSWORD` | login password |
-| `RIVERFLOW_AUTH_SECRET` | HMAC signing secret (optional; random per restart when unset, which logs out all sessions on restart) |
+| `npm run build` fails with type errors | Ensure Node ≥ 20 and a clean `npm install`; the build is strict |
+| Uploaded 4K video ends immediately | The file is likely HEVC/H.265 — re-encode to H.264 MP4 (4K H.264 is auto-downscaled) |
+| Live site shows demo mode | Expected without a backend — connect one via *Settings → Remote Backend* or run locally |
+| Login rejected | Check the exact account in Firebase Console → Authentication → Users (`name@riverflow.app`, sign in with `name`) |
+| Port 8000 already in use | Stop the old process or change the port: `python backend/main.py --port 8001` |
+| Charts empty after processing stops | History page keeps everything; the live buffer only holds the session |
+| `pyserial`/`ultralytics` import errors | They are optional — install only for real hardware/model use |
 
-When enabled, all API endpoints, the WebSocket and the video stream require a
-valid session cookie (30-day expiry, HttpOnly). The login page appears
-automatically; a logout button shows in the top bar.
+## Project Status
 
-On **Render**: Service → **Environment** → add `RIVERFLOW_AUTH_USER` and
-`RIVERFLOW_AUTH_PASSWORD` → Save (triggers redeploy). Use a long password.
+**Research prototype** (undergraduate thesis). The measurement pipeline,
+dashboard, history, calibration gating, authentication, and deployment paths
+work end-to-end; hardware integration (LiDAR serial, LoRa gateway, Pi
+deployment) and the trained debris model are still being brought up. Not
+production-ready — see *Current limitations* below.
 
-On **Docker**: `docker run -e RIVERFLOW_AUTH_USER=admin -e RIVERFLOW_AUTH_PASSWORD=… …`
-
----
-
-## Current limitations
+### Current limitations
 
 - Velocity stays image-space until real calibration data exists (by design).
 - Discharge output is not implemented in the live loop yet (gating exists).
-- Debris detection requires a trained YOLO model — currently reported as
-  "Model not configured".
+- Debris detection requires a trained YOLO model — reports "not configured" until then.
 - Uniform m/px scale does not correct perspective; research-grade LSPIV
   belongs to the PyORC workflow.
 - Camera water-edge detection is experimental and supplementary.
 - LoRa/cloud ingest is architecture-only; no gateway is connected yet.
+
+## Authors
+
+Undergraduate thesis research project, developed by
+[JoAhr Galanto (@JoAhr25)](https://github.com/JoAhr25) and the river
+monitoring research team.
+
+## License
+
+No open-source license has been selected yet; the project is
+all-rights-reserved by its authors by default. (Choosing one — e.g. MIT — is
+a maintainer decision; happy path: add a `LICENSE` file and update this
+section.)

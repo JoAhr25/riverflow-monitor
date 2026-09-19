@@ -310,6 +310,10 @@ export const api = {
     }
   },
 
+  async deleteVideo(videoId: string): Promise<{ deleted: string }> {
+    return await handle(await rfFetch(`/api/video/${encodeURIComponent(videoId)}`, { method: "DELETE" }));
+  },
+
   async startAnalysis(request: Record<string, unknown>): Promise<{ status: string; source_type: string; label?: string }> {
     try {
       return await handle(

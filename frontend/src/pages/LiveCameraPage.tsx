@@ -192,17 +192,41 @@ export default function LiveCameraPage() {
                           <span className="truncate" title={s.video_id}>
                             <span className="text-slate-400">[{s.origin}]</span> {s.video_id}
                           </span>
-                          <button
-                            className="shrink-0 font-medium text-sky-600 hover:underline dark:text-sky-400"
-                            disabled={running || busy}
-                            onClick={() =>
-                              s.origin === "upload"
-                                ? start({ source_type: "upload", video_id: s.video_id })
-                                : start({ source_type: "upload", repo_path: s.video_id })
-                            }
-                          >
-                            Start
-                          </button>
+                          <span className="flex shrink-0 items-center gap-1">
+                            <button
+                              className="font-medium text-sky-600 hover:underline dark:text-sky-400"
+                              disabled={running || busy}
+                              onClick={() =>
+                                s.origin === "upload"
+                                  ? start({ source_type: "upload", video_id: s.video_id })
+                                  : start({ source_type: "upload", repo_path: s.video_id })
+                              }
+                            >
+                              Start
+                            </button>
+                            {s.origin === "upload" && (
+                              <button
+                                className="rounded p-1 text-slate-400 transition hover:bg-rose-500/10 hover:text-rose-500 disabled:opacity-40"
+                                title={`Remove ${s.video_id}`}
+                                aria-label={`Remove ${s.video_id}`}
+                                disabled={running || busy}
+                                onClick={async () => {
+                                  setError(null);
+                                  try {
+                                    const res = await api.deleteVideo(s.video_id);
+                                    setInfo(`Removed ${res.deleted}.`);
+                                    refreshSources();
+                                  } catch (err) {
+                                    setError((err as Error).message);
+                                  }
+                                }}
+                              >
+                                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.9 12.1A2 2 0 0116.1 21H7.9a2 2 0 01-2-1.9L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3m-4 0h14" />
+                                </svg>
+                              </button>
+                            )}
+                          </span>
                         </li>
                       ))}
                     </ul>

@@ -80,9 +80,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# CORS: by default any origin is allowed (local dev + temporary tunnels).
+# Set RIVERFLOW_CORS_ORIGINS="https://a.example,https://b.example" to
+# restrict the API to exact origins in production deployments.
+_cors_origins = [o.strip() for o in os.environ.get("RIVERFLOW_CORS_ORIGINS", "").split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=".*",
+    **(
+        {"allow_origins": _cors_origins}
+        if _cors_origins
+        else {"allow_origin_regex": ".*"}
+    ),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

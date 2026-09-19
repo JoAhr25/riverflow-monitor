@@ -170,6 +170,11 @@ class CameraManager:
         log_interval = float(cfg.get("storage", {}).get("log_interval_s", 1.0))
         frame_interval = max(1, int(cfg["flow"].get("frame_interval", 5)))
         source_fps = meta.fps if meta.fps and meta.fps > 1 else None
+        # High-res inputs (4K+) are downscaled before processing: JPEG encode
+        # and full-frame operations at 4K exceed the real-time budget on most
+        # hardware. Measurements are unaffected (optical flow already runs on
+        # a <=480px copy). Tunable via camera.process_max_width.
+        process_max_width = max(640, int(cfg.get("camera", {}).get("process_max_width", 1920)))
 
         self.state.update(
             processing={"status": "running", "message": f"Processing {source.label}"},
@@ -203,15 +208,29 @@ class CameraManager:
             if not ok or frame is None:
                 if getattr(source, "_loop", False) and source.rewind():
                     continue
+                if frame_idx == 0:
+                    end_msg = (
+                        f"No decodable frames in {source.label} - the codec may be unsupported "
+                        "(e.g. HEVC/H.265). Re-encode to H.264 MP4 and try again."
+                    )
+                else:
+                    end_msg = f"Source ended: {source.label}"
                 self.state.update(
-                    processing={"status": "idle", "message": f"Source ended: {source.label}"},
-                    camera={"status": "idle", "fps": None, "frames": frame_idx, "message": f"{source.label} ended."},
+                    processing={"status": "idle", "message": end_msg},
+                    camera={"status": "idle", "fps": None, "frames": frame_idx, "message": end_msg},
                 )
                 break
 
             frame_idx += 1
             now = time.time()
             frame_times.append(now)
+            if frame.shape[1] > process_max_width:
+                scale = process_max_width / frame.shape[1]
+                frame = cv2.resize(
+                    frame,
+                    (process_max_width, max(2, int(round(frame.shape[0] * scale)))),
+                    interpolation=cv2.INTER_AREA,
+                )
             # Hot-reload overlay flags so the UI toggles apply mid-run
             # without restarting processing (refreshed ~5x per second).
             if frame_idx % 5 == 1:

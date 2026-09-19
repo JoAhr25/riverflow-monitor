@@ -29,44 +29,34 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      {/* Quiet station header */}
+      <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-2">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Overview</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <div className="micro-label mb-1">Monitoring Overview</div>
+          <p className="text-[13px] text-slate-400 dark:text-slate-500">
             {new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
           </p>
         </div>
-        <div className="text-right text-xs text-slate-500 dark:text-slate-400">
-          <div>
-            Source: <span className="font-medium text-slate-700 dark:text-slate-200">{status?.source?.mode_label ?? "No source"}</span>
-          </div>
-          <div className="mt-0.5">
-            Camera FPS: <span className="font-mono">{latest?.camera?.fps != null ? latest.camera.fps.toFixed(1) : "--"}</span>
-          </div>
+        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1 font-mono text-[11px] tracking-wide text-slate-400 dark:text-slate-500">
+          <span>
+            source <span className="text-brand-700 dark:text-sky-300">{status?.source?.mode_label ?? "none"}</span>
+          </span>
+          <span>
+            camera{" "}
+            <span className="text-brand-700 dark:text-sky-300">
+              {latest?.camera?.fps != null ? `${latest.camera.fps.toFixed(1)} fps` : "—"}
+            </span>
+          </span>
+          <span>
+            frame <span className="text-brand-700 dark:text-sky-300">{latest?.camera?.frames != null ? latest.camera.frames : "—"}</span>
+          </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
-        <Card title="Live River Camera" className="xl:col-span-2" subtitle="Overlays (ROI, flow vectors, detections) are generated from actual processing">
-          <CameraFeed />
-          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
-            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-emerald-400" /> ROI</span>
-            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-cyan-400" /> Flow: slow</span>
-            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-amber-400" /> faster</span>
-            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-rose-400" /> fast · debris</span>
-            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-sky-400" /> Water edge</span>
-          </div>
-        </Card>
-
-        <Card title="System Status" subtitle="Backend health checks">
-          {status ? <StatusList components={status.components} /> : <EmptyState message="Backend status unavailable." />}
-        </Card>
-      </div>
-
       {loading ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 divide-y divide-slate-200/70 rounded-md border border-slate-200/70 bg-white/60 sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4 lg:divide-x dark:divide-slate-800/60 dark:border-slate-800/60 dark:bg-slate-900/30">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div key={i} className="px-4 py-3.5">
               <div className="h-3 w-20 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
               <div className="mt-3 h-8 w-24 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
               <div className="mt-3 h-3 w-32 animate-pulse rounded bg-slate-100 dark:bg-slate-800/60" />
@@ -74,7 +64,7 @@ export default function DashboardPage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 divide-y divide-slate-200/70 rounded-md border border-slate-200/70 bg-white/60 sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4 lg:divide-x dark:divide-slate-800/60 dark:border-slate-800/60 dark:bg-slate-900/30">
           <MetricCard
             label="Water Level"
             value={water?.value != null ? water.value.toFixed(3) : "--"}
@@ -124,8 +114,8 @@ export default function DashboardPage() {
                 : "No debris data"
             }
           />
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <span className="text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400">Flow Direction</span>
+          <div className="px-4 py-3.5">
+            <span className="micro-label">Flow Direction</span>
             <div className="mt-1 flex items-center justify-between">
               <Compass directionDeg={flow?.direction_deg} size={72} />
               <div className="text-right text-xs text-slate-500 dark:text-slate-400">
@@ -139,6 +129,23 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+        <Card title="Live River Camera" className="xl:col-span-2" subtitle="Overlays (ROI, flow vectors, detections) are generated from actual processing">
+          <CameraFeed />
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-emerald-400" /> ROI</span>
+            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-cyan-400" /> Flow: slow</span>
+            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-amber-400" /> faster</span>
+            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-rose-400" /> fast · debris</span>
+            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-sky-400" /> Water edge</span>
+          </div>
+        </Card>
+
+        <Card title="System Status" subtitle="Backend health checks">
+          {status ? <StatusList components={status.components} /> : <EmptyState message="Backend status unavailable." />}
+        </Card>
+      </div>
 
       {!flow?.calibrated && flow && (
         <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
@@ -161,7 +168,7 @@ export default function DashboardPage() {
             : "no data",
         )}
       >
-        <LiveChart data={flow?.calibrated ? velocitySeries : motionSeries} unit={flow?.calibrated ? "m/s" : "px"} color="#38bdf8" height={240} />
+        <LiveChart data={flow?.calibrated ? velocitySeries : motionSeries} unit={flow?.calibrated ? "m/s" : "px"} color="#38c8e3" height={240} />
       </Card>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
