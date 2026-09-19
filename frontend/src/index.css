@@ -120,7 +120,25 @@ html.dark body::after {
 
 /* Quiet label: section eyebrows and field labels */
 .micro-label {
-  @apply text-[10.5px] font-medium tracking-[0.08em] text-slate-400 uppercase dark:text-slate-500;
+  @apply text-[10.5px] font-medium tracking-[0.08em] text-slate-500 uppercase dark:text-slate-400;
+}
+
+/* Accessible focus: visible ring for keyboard users on any interactive element */
+:focus-visible {
+  outline: 2px solid var(--color-sky-500);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Viewfinder frame — reserved for the camera only */

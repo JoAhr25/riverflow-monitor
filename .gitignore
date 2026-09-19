@@ -80,3 +80,6 @@ riverflow logo.png
 
 # Thesis draft (kept out of the public repo; delete this line to publish it)
 Thesis Paper.docx
+
+# Local-only notes and helpers (never push)
+local-notes/
